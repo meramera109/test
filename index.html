@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>座標計算（放射計算）</title>
+  <style>
+    :root{
+      --bg:#ffffff; --fg:#222;
+      --line:#ccc; --line2:#808080;
+      --b2:#e9f2ff; --b:#dbeaff;
+      --g0:#f4f4f4; --g2:#e9f6ea; --g:#dbf0dd;
+      --y2:#fff3d9; --accent:#1b8f2f; --danger:#c62828;
+    }
+    body{ margin:0; font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif; color:var(--fg); background:var(--bg); }
+    header{ padding:16px 12px; border-bottom:1px solid #eee; }
+    header h1{ margin:0; font-size:18px; }
+    main{ max-width:980px; margin:0 auto; padding:12px; }
+
+    h2{ margin:10px 0 8px; font-size:20px; }
+    .sub{ font-size:12px; color:#666; display:block; margin-bottom:2px; }
+    .card{ border:1px solid #e6e6e6; border-radius:10px; padding:12px; background:#fff; box-shadow:0 2px 10px rgba(0,0,0,.03); }
+    .row{ display:flex; gap:12px; flex-wrap:wrap; }
+    .col{ flex:1 1 340px; min-width:280px; }
+    .muted{ color:#666; font-size:13px; }
+    .note{ background:#fff8f8; border:1px solid #ffd6d6; padding:10px; border-radius:8px; font-size:13px; }
+    .note b{ color:var(--danger); }
+    .btn{ display:inline-flex; align-items:center; justify-content:center; padding:10px 14px; border-radius:10px; border:1px solid #ddd; background:#fafafa; cursor:pointer; font-weight:600; }
+    .btn-primary{ background:var(--accent); color:#fff; border-color:rgba(0,0,0,.05); }
+    .btn:active{ transform:translateY(1px); }
+    .btnbar{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+
+    .calc-form0{
+      line-height:1.5; margin:1px 0; padding:6px 10px;
+      border:1px solid var(--line);
+      border-color:var(--line) var(--line2);
+      border-radius:8px;
+      font-weight:700;
+      background:var(--g0);
+    }
+    .calc-form{
+      line-height:1.2; margin:1px 0; padding:0;
+      border-right:1px solid var(--line2);
+      border-bottom:1px solid var(--line);
+      border-left:1px solid var(--line2);
+      border-radius:8px;
+      overflow:hidden;
+    }
+    .calc-form-l{
+      width:120px; flex:0 0 120px;
+      padding:10px;
+      font-weight:700;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .calc-form-r2{
+      flex:1 1 auto;
+      border-left:1px solid var(--line);
+      padding:10px;
+      background:#fff;
+    }
+
+    /* 縦揃え（器械点／測点共通） */
+    .stack{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      gap:10px;
+    }
+    .stack label{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      gap:6px;
+      font-size:14px;
+    }
+
+    .pill{
+      font-size:12px; padding:2px 8px; border-radius:999px;
+      background:#f1f1f1; color:#333; border:1px solid #e6e6e6;
+    }
+
+    input[type="text"]{
+      padding:8px 10px; border-radius:10px; border:1px solid #d9d9d9;
+      font-size:14px; width:140px;
+    }
+    .calc-width100{ width:120px; }
+    .calc-width120{ width:140px; }
+
+    /* ★器械点：背景と同色＆選択不可（クリックしても反応しない） */
+    .fixed-input{
+      background: inherit !important;     /* 親要素の背景色に合わせる */
+      border-color: transparent !important;
+      box-shadow: none !important;
+      outline: none !important;
+      caret-color: transparent !important; /* キャレット非表示 */
+      pointer-events: none !important;     /* マウス・タッチ無効 */
+      user-select: none !important;        /* 選択不可 */
+      -webkit-user-select: none !important;
+      -ms-user-select: none !important;
+    }
+    .fixed-input::selection{ background: transparent; }
+
+    .help{
+      margin:10px 0 0;
+      padding:10px 12px;
+      border-radius:10px;
+      background:var(--y2);
+      border:1px solid #ffe2a8;
+      font-size:13px;
+    }
+    .help ul{ margin:6px 0 0 18px; padding:0; }
+    .help li{ margin:4px 0; }
+
+    .output{ margin-top:12px; border:1px solid #eee; border-radius:10px; overflow:hidden; }
+    .output header{
+      border-bottom:1px solid #eee;
+      padding:10px 12px;
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+    }
+    table{ width:100%; border-collapse:collapse; }
+    th,td{ padding:8px 10px; border-bottom:1px solid #f0f0f0; font-size:14px; text-align:left; }
+    th{ background:#fafafa; }
+    .err{ color:var(--danger); font-weight:700; }
+    .ok{ color:#0b6b20; font-weight:700; }
+
+    canvas{
+      width:100%;
+      height:360px;
+      border:1px solid #eee;
+      border-radius:12px;
+      background:#fff;
+    }
+    @media (min-width:900px){
+      header h1{ font-size:20px; }
+      h2{ font-size:22px; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Web測量計算：座標計算（放射計算）</h1>
+</header>
+
+<main>
+  <h2><span class="sub">Web 測量計算（簡易版）</span>座標計算（方向角＋距離 → 座標）</h2>
+
+  <div class="row">
+    <!-- 左：入力 -->
+    <section class="col card">
+      <div class="calc-form0">データ入力欄</div>
+
+      <!-- O点（器械点固定） -->
+      <div class="calc-form" style="background:var(--g2);">
+        <div style="display:flex;">
+          <div class="calc-form-l" style="background:var(--g2);">O点座標</div>
+
+          <!-- ★ここが緑背景なので、fixed-input はこの背景に同化します -->
+          <div class="calc-form-r2" style="background:var(--g);">
+            <div class="stack">
+              <span class="pill">器械点（固定）</span>
+
+              <label>
+                X
+                <input id="x0"
+                       type="text"
+                       class="calc-width120 fixed-input"
+                       value="-33448.641"
+                       readonly
+                       tabindex="-1"
+                       aria-readonly="true">
+              </label>
+
+              <label>
+                Y
+                <input id="y0"
+                       type="text"
+                       class="calc-width120 fixed-input"
+                       value="73926.510"
+                       readonly
+                       tabindex="-1"
+                       aria-readonly="true">
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 測点01-05 -->
+      <div id="points"></div>
+
+      <div class="help">
+        <b>入力ルール</b>
+        <ul>
+          <li>測点データ（方向角・距離）は、測点01から順に間を開けずに入力してください（途中空欄があると、そこで打ち切ります）。</li>
+          <li>角度は <b>度.分秒</b> 形式（例：140°2′28″ → <b>140.0228</b>）を推奨します。<br>
+              <span class="muted">※「140.02」= 140°02′00″ として扱います。</span>
+          </li>
+          <li>方向角は <b>北（+X）から時計回り</b>で計算します：ΔX=L·cos(H), ΔY=L·sin(H)</li>
+        </ul>
+      </div>
+
+      <div class="btnbar">
+        <button class="btn btn-primary" id="runBtn">計算実行</button>
+        <button class="btn" id="clearBtn">クリア</button>
+        <label style="display:flex; align-items:center; gap:8px; font-size:13px;">
+          <input type="checkbox" id="confirmRun" checked>
+          実行前に確認ダイアログを出す
+        </label>
+      </div>
+
+      <div class="note" style="margin-top:12px;">
+        <b>【ご注意ください】</b><br>
+        このページの計算結果は、入力ミスや想定外条件で誤る可能性があります。重要な座標は必ず別手段でも確認してください。
+      </div>
+    </section>
+
+    <!-- 右：図形＋結果 -->
+    <section class="col card">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; gap:10px;">
+        <h3 style="margin:0;">簡易図形（放射）</h3>
+        <div class="muted">O点から各点へ放射表示</div>
+      </div>
+
+      <div style="margin-top:10px;">
+        <canvas id="plot" width="900" height="600" aria-label="簡易図形"></canvas>
+      </div>
+
+      <div class="output" style="margin-top:12px;">
+        <header>
+          <div style="font-weight:800;">計算結果</div>
+          <div class="btnbar" style="margin:0;">
+            <button class="btn" id="csvBtn" disabled>CSV出力</button>
+            <button class="btn" id="copyBtn" disabled>表をコピー</button>
+          </div>
+        </header>
+
+        <div style="overflow:auto;">
+          <table id="resultTable">
+            <thead>
+              <tr>
+                <th>測点</th>
+                <th>方向角 H（度）</th>
+                <th>距離 L</th>
+                <th>ΔX</th>
+                <th>ΔY</th>
+                <th>Px（X）</th>
+                <th>Py（Y）</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="7" class="muted">まだ計算していません。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="msg" style="padding:10px 12px; font-size:13px;"></div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+  // ========= UI生成 =========
+  const pointsRoot = document.getElementById("points");
+  const POINT_MAX = 5;
+
+  function makePointRow(i){
+    const wrap = document.createElement("div");
+    wrap.className = "calc-form";
+    wrap.style.background = "var(--b2)";
+    wrap.innerHTML = `
+      <div style="display:flex;">
+        <div class="calc-form-l" style="background:var(--b2);">測点 ${String(i).padStart(2,"0")}</div>
+        <div class="calc-form-r2" style="background:var(--b);">
+          <!-- 方向角と距離を縦揃え -->
+          <div class="stack">
+            <label>
+              方向角
+              <input id="hoko${i}" type="text" inputmode="decimal" placeholder="例）140.0228" class="calc-width100">
+            </label>
+            <label>
+              距離
+              <input id="kyori${i}" type="text" inputmode="decimal" placeholder="例）12.345" class="calc-width100">
+            </label>
+          </div>
+        </div>
+      </div>
+    `;
+    return wrap;
+  }
+  for(let i=1;i<=POINT_MAX;i++) pointsRoot.appendChild(makePointRow(i));
+
+  // ========= 入力パース =========
+  function toNumber(s){
+    if(s == null) return null;
+    const t = String(s).trim().replace(/,/g,"");
+    if(t === "") return null;
+    const v = Number(t);
+    return Number.isFinite(v) ? v : null;
+  }
+
+  // 方向角入力：dd.mmss（例 140.0228 => 140°02'28"）
+  function parseAngleDegFromDMSLike(input){
+    const raw = String(input ?? "").trim();
+    if(raw === "") return null;
+
+    // 小数度を明示したい場合：末尾 d（例: 140.041111d）
+    if(/[dD]$/.test(raw)){
+      const v = toNumber(raw.slice(0,-1));
+      return v == null ? null : v;
+    }
+
+    const parts = raw.replace(/,/g,"").split(".");
+    const deg = toNumber(parts[0]);
+    if(deg == null) return null;
+
+    let mm = 0, ss = 0;
+    if(parts.length >= 2){
+      let frac = (parts[1] ?? "").replace(/\D/g,"");
+      if(frac.length === 0){
+        mm = 0; ss = 0;
+      }else if(frac.length <= 2){
+        mm = Number(frac);
+        ss = 0;
+      }else{
+        frac = frac.padEnd(4, "0").slice(0,4);
+        mm = Number(frac.slice(0,2));
+        ss = Number(frac.slice(2,4));
+      }
+    }
+
+    if(!(mm >= 0 && mm < 60 && ss >= 0 && ss < 60)) return null;
+    return deg + (mm/60) + (ss/3600);
+  }
+
+  function degToRad(deg){ return deg * Math.PI / 180; }
+
+  // ========= 計算 =========
+  function readInputs(){
+    // 器械点は固定（画面から取得）
+    const x0 = toNumber(document.getElementById("x0").value);
+    const y0 = toNumber(document.getElementById("y0").value);
+
+    const pts = [];
+    for(let i=1;i<=POINT_MAX;i++){
+      const hRaw = document.getElementById(`hoko${i}`).value;
+      const lRaw = document.getElementById(`kyori${i}`).value;
+
+      const hasAny = String(hRaw).trim() !== "" || String(lRaw).trim() !== "";
+      if(!hasAny) break;
+
+      const Hdeg = parseAngleDegFromDMSLike(hRaw);
+      const L = toNumber(lRaw);
+      pts.push({ idx:i, Hdeg, L });
+    }
+    return { x0, y0, pts };
+  }
+
+  function validate(data){
+    const errors = [];
+    if(data.x0 == null) errors.push("器械点Xが不正です。");
+    if(data.y0 == null) errors.push("器械点Yが不正です。");
+    if(data.pts.length === 0){
+      errors.push("少なくとも「測点01の方向角」と「距離」を入力してください。");
+      return errors;
+    }
+    data.pts.forEach(p=>{
+      if(p.Hdeg == null) errors.push(`「測点${String(p.idx).padStart(2,"0")}の方向角」が不正です（例：140.0228）。`);
+      if(p.L == null) errors.push(`「測点${String(p.idx).padStart(2,"0")}の距離」が不正です。`);
+      if(p.L != null && p.L < 0) errors.push(`「測点${String(p.idx).padStart(2,"0")}の距離」は0以上で入力してください。`);
+    });
+    return errors;
+  }
+
+  function compute(data){
+    // 北(+X)基準・時計回り
+    return data.pts.map(p=>{
+      const rad = degToRad(p.Hdeg);
+      const dX = p.L * Math.cos(rad);
+      const dY = p.L * Math.sin(rad);
+      return {
+        name:`P${p.idx}`,
+        Hdeg:p.Hdeg, L:p.L,
+        dX, dY,
+        Px:data.x0 + dX,
+        Py:data.y0 + dY
+      };
+    });
+  }
+
+  function fmt(n){
+    if(n == null || !Number.isFinite(n)) return "";
+    return (Math.round(n*1000)/1000).toFixed(3);
+  }
+  function fmtDeg(n){
+    if(n == null || !Number.isFinite(n)) return "";
+    return (Math.round(n*1000000)/1000000).toFixed(6);
+  }
+
+  // ========= 表示 =========
+  const tbody = document.querySelector("#resultTable tbody");
+  const msg = document.getElementById("msg");
+  const csvBtn = document.getElementById("csvBtn");
+  const copyBtn = document.getElementById("copyBtn");
+
+  function renderTable(rows){
+    tbody.innerHTML = "";
+    for(const r of rows){
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><b>${r.name}</b></td>
+        <td>${fmtDeg(r.Hdeg)}</td>
+        <td>${fmt(r.L)}</td>
+        <td>${fmt(r.dX)}</td>
+        <td>${fmt(r.dY)}</td>
+        <td>${fmt(r.Px)}</td>
+        <td>${fmt(r.Py)}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+  }
+
+  function setMessage(ok, text){
+    msg.innerHTML = ok ? `<span class="ok">OK</span> ${text}` : `<span class="err">NG</span> ${text}`;
+  }
+
+  // ========= 図形 =========
+  const canvas = document.getElementById("plot");
+  const ctx = canvas.getContext("2d");
+
+  function clearPlot(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.save();
+    ctx.globalAlpha = 0.12;
+    for(let x=0;x<=canvas.width;x+=50){
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke();
+    }
+    for(let y=0;y<=canvas.height;y+=50){
+      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function plotRays(rows){
+    clearPlot();
+    const W = canvas.width, H = canvas.height;
+    const cx = Math.round(W*0.5), cy = Math.round(H*0.55);
+
+    let maxR = 1;
+    rows.forEach(r=>{
+      const rr = Math.hypot(r.dX, r.dY);
+      if(rr > maxR) maxR = rr;
+    });
+
+    const margin = 60;
+    const scale = Math.min((W/2 - margin), (H/2 - margin)) / maxR;
+
+    ctx.save();
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+    ctx.moveTo(margin, cy); ctx.lineTo(W-margin, cy);
+    ctx.moveTo(cx, H-margin); ctx.lineTo(cx, margin);
+    ctx.stroke();
+
+    ctx.font = "14px system-ui";
+    ctx.fillText("+Y →", W-margin-60, cy-10);
+    ctx.fillText("+X ↑", cx+10, margin+20);
+
+    ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI*2); ctx.fill();
+    ctx.fillText("O", cx+8, cy-8);
+
+    rows.forEach(r=>{
+      const x = cx + r.dY * scale;
+      const y = cy - r.dX * scale;
+
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x, y); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI*2); ctx.fill();
+      ctx.fillText(r.name, x+8, y-8);
+    });
+
+    ctx.restore();
+
+    ctx.save();
+    ctx.globalAlpha = 0.9;
+    ctx.fillText("※ 図形は相対（ΔX,ΔY）で自動スケール表示", 14, H-16);
+    ctx.restore();
+  }
+
+  // ========= CSV / コピー =========
+  function rowsToCSV(rows){
+    const header = ["point","H_deg","L","dX","dY","Px","Py"];
+    const lines = [header.join(",")];
+    for(const r of rows){
+      lines.push([r.name, fmtDeg(r.Hdeg), fmt(r.L), fmt(r.dX), fmt(r.dY), fmt(r.Px), fmt(r.Py)].join(","));
+    }
+    return lines.join("\n");
+  }
+
+  function downloadText(filename, text){
+    const blob = new Blob([text], {type:"text/plain;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  async function copyTableText(rows){
+    const header = ["測点","H(度)","L","ΔX","ΔY","Px","Py"];
+    const lines = [header.join("\t")];
+    for(const r of rows){
+      lines.push([r.name, fmtDeg(r.Hdeg), fmt(r.L), fmt(r.dX), fmt(r.dY), fmt(r.Px), fmt(r.Py)].join("\t"));
+    }
+    await navigator.clipboard.writeText(lines.join("\n"));
+  }
+
+  // ========= 操作 =========
+  let lastRows = null;
+
+  document.getElementById("runBtn").addEventListener("click", ()=>{
+    const data = readInputs();
+    const errs = validate(data);
+    if(errs.length){
+      setMessage(false, errs[0]);
+      alert(errs.join("\n"));
+      return;
+    }
+
+    if(document.getElementById("confirmRun").checked){
+      const ok = confirm("計算を実行します。\n「OK」を押してください。");
+      if(!ok) return;
+    }
+
+    const rows = compute(data);
+    lastRows = rows;
+
+    renderTable(rows);
+    plotRays(rows);
+    setMessage(true, `計算しました（測点数：${rows.length}）。`);
+
+    csvBtn.disabled = false;
+    copyBtn.disabled = false;
+  });
+
+  document.getElementById("clearBtn").addEventListener("click", ()=>{
+    // 器械点は固定なので触らない
+    for(let i=1;i<=POINT_MAX;i++){
+      document.getElementById(`hoko${i}`).value = "";
+      document.getElementById(`kyori${i}`).value = "";
+    }
+
+    tbody.innerHTML = `<tr><td colspan="7" class="muted">まだ計算していません。</td></tr>`;
+    setMessage(true, "クリアしました（器械点は固定のまま）。");
+
+    lastRows = null;
+    csvBtn.disabled = true;
+    copyBtn.disabled = true;
+    clearPlot();
+  });
+
+  csvBtn.addEventListener("click", ()=>{
+    if(!lastRows) return;
+    downloadText("coordinates.csv", rowsToCSV(lastRows));
+  });
+
+  copyBtn.addEventListener("click", async ()=>{
+    if(!lastRows) return;
+    try{
+      await copyTableText(lastRows);
+      setMessage(true, "表（TSV形式）をクリップボードへコピーしました。");
+    }catch(e){
+      setMessage(false, "コピーに失敗しました（ブラウザ権限設定をご確認ください）。");
+    }
+  });
+
+  // 初期描画
+  clearPlot();
+  setMessage(true, "測点01から入力して「計算実行」を押してください（器械点は固定・選択不可）。");
+</script>
+</body>
+</html>
