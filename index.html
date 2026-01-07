@@ -399,7 +399,7 @@
 
 <script>
  
-  const API_URL = "https://script.google.com/macros/s/AKfycbzhpuvJ3WUljeA8EIuftUFEmlvfW_9Qjbx2FWUkiWCxWQR_SWArdOUJewbI5U86H00/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycbyQs8PYvWD7qyzXjNL1sgaKpjzifSSGU8G3vUtC4Q61-nAXQCGKphf7jGRZGK5p5x-0/exec";
   
   const $ = (id) => document.getElementById(id);
   const yen = (n) => (n === "" || n === null || n === undefined) ? "" : Number(n).toLocaleString("ja-JP");
@@ -439,13 +439,95 @@
     return d;
   };
 
-  const KEY = "lease_items_v9_statusfilter_4choices";
-  const load = () => {
+  const KEY = "lease_items_cache_v1"; // オフライン表示用のキャッシュ（サーバが正）
+
+  // --- JSONP client (GAS推奨) ---
+  function jsonp(action, params = {}) {
+    return new Promise((resolve, reject) => {
+      const cb = "cb_" + Math.random().toString(16).slice(2);
+      const qs = new URLSearchParams({ action, callback: cb, ...params });
+      const url = `${API_URL}?${qs.toString()}`;
+
+      window[cb] = (data) => { cleanup(); resolve(data); };
+
+      const script = document.createElement("script");
+      script.src = url;
+      script.onerror = () => { cleanup(); reject(new Error("JSONP failed")); };
+      document.body.appendChild(script);
+
+      function cleanup(){
+        try { delete window[cb]; } catch {}
+        try { script.remove(); } catch {}
+      }
+    });
+  }
+
+  // --- local cache ---
+  const loadCache = () => {
     try { return JSON.parse(localStorage.getItem(KEY) || "[]"); }
     catch { return []; }
   };
-  const save = (items) => localStorage.setItem(KEY, JSON.stringify(items));
-  let items = load();
+  const saveCache = (items) => {
+    try { localStorage.setItem(KEY, JSON.stringify(items)); } catch {}
+  };
+
+  // --- mapping: sheet -> UI ---
+  function fromSheet_(r){
+    return {
+      id: String(r.id ?? ""),
+      project: r.project || "",
+      name: r.name || "",
+      qtyTotal: Number(r.qty_total || 0),
+      qtyOut: Number(r.qty_out || 0),
+      billing: r.billing || "daily",
+      priceUnknown: (r.price_unknown === true) || (String(r.price_unknown).toLowerCase() === "true"),
+      unitPrice: (r.unit_price === "" || r.unit_price === null || r.unit_price === undefined) ? "" : Number(r.unit_price),
+      vendor: r.vendor || "",
+      slipNo: r.slip_no || "",
+      assetNo: r.asset_no || "",
+      memo: r.memo || "",
+      startDate: r.start_date || "",
+      dueDate: r.due_date || "",
+      status: r.status || "rented",
+      returns: Array.isArray(r.returns) ? r.returns.map(x => ({ date: x.date, qty: Number(x.qty || 0) })) : []
+    };
+  }
+
+  // --- mapping: UI -> addItem params (GAS) ---
+  function toAddParams_(){
+    const priceUnknown = $("priceUnknown").checked;
+    const unitPriceStr = $("unitPrice").value.trim();
+    return {
+      project: $("project").value.trim(),
+      name: $("name").value.trim(),
+      qty_total: String($("qty").value),
+      billing: $("billing").value,
+      price_unknown: priceUnknown ? "true" : "false",
+      unit_price: (priceUnknown || unitPriceStr === "") ? "" : unitPriceStr,
+      vendor: $("vendor").value.trim(),
+      slip_no: $("slipNo").value.trim(),
+      asset_no: $("assetNo").value.trim(),
+      start_date: $("startDate").value,
+      due_date: $("dueDate").value,
+      memo: $("memo").value.trim()
+    };
+  }
+
+  async function refreshFromServer_(){
+    try{
+      const res = await jsonp("list");
+      if(!res || !res.ok) throw new Error(res && res.error ? res.error : "list failed");
+      items = (res.items || []).map(fromSheet_);
+      saveCache(items);
+      updateNavCount();
+      render();
+    }catch(err){
+      console.warn("refresh failed:", err);
+      // オフラインでも使えるようキャッシュ表示は維持
+    }
+  }
+
+  let items = loadCache();
 
   const openHistory = new Set();
 
@@ -660,10 +742,30 @@
   }
 
   function applyReturn(it, qty, dateStr){
+    // 画面の挙動はそのまま（ローカルで即時反映）＋サーバへ確定
     if(!Array.isArray(it.returns)) it.returns = [];
     it.returns.push({ date: dateStr, qty });
     it.qtyOut = Math.max(0, Number(it.qtyOut) - qty);
     it.status = (it.qtyOut === 0) ? "returned" : "rented";
+
+    // いったん表示更新（見た目は従来通り）
+    updateNavCount();
+    render();
+
+    // サーバで返却処理（失敗時はサーバ再取得で整合）
+    (async () => {
+      try{
+        const res = await jsonp("returnItem", { id: String(it.id), qty: String(qty), return_date: String(dateStr) });
+        if(!res || !res.ok){
+          alert(res && res.error ? res.error : "返却に失敗しました");
+        }
+        await refreshFromServer_();
+      }catch(err){
+        console.error(err);
+        alert("通信エラー：返却に失敗しました");
+        await refreshFromServer_();
+      }
+    })();
   }
 
   function undoLastReturn(it){
@@ -680,8 +782,22 @@
     it.qtyOut = Math.min(total, Math.max(0, Number(it.qtyOut) + qty));
     it.status = (it.qtyOut === 0) ? "returned" : "rented";
 
-    save(items);
+    updateNavCount();
     render();
+
+    (async () => {
+      try{
+        const res = await jsonp("undoReturn", { id: String(it.id) });
+        if(!res || !res.ok){
+          alert(res && res.error ? res.error : "返却取消に失敗しました");
+        }
+        await refreshFromServer_();
+      }catch(err){
+        console.error(err);
+        alert("通信エラー：返却取消に失敗しました");
+        await refreshFromServer_();
+      }
+    })();
   }
 
   function forceBackToRented(it){
@@ -689,8 +805,23 @@
     const total = Number(it.qtyTotal) || 0;
     it.qtyOut = total;
     it.status = "rented";
-    save(items);
+
+    updateNavCount();
     render();
+
+    (async () => {
+      try{
+        const res = await jsonp("backToRented", { id: String(it.id) });
+        if(!res || !res.ok){
+          alert(res && res.error ? res.error : "借入へ戻す処理に失敗しました");
+        }
+        await refreshFromServer_();
+      }catch(err){
+        console.error(err);
+        alert("通信エラー：借入へ戻す処理に失敗しました");
+        await refreshFromServer_();
+      }
+    })();
   }
 
   function toggleHistory(id){
@@ -807,14 +938,12 @@
         const v = validateReturnInput(out, qtyInput.value, dateInput.value);
         if(!v.ok){ alert(v.msg); return; }
         applyReturn(it, v.qty, v.date);
-        save(items); render();
       };
 
       btnAll.onclick = () => {
         const v = validateReturnInput(out, String(out), dateInput.value);
         if(!v.ok){ alert(v.msg); return; }
         applyReturn(it, out, v.date);
-        save(items); render();
       };
 
       btnUndo.onclick = () => undoLastReturn(it);
@@ -838,8 +967,18 @@
       setDue.onclick = () => {
         const d = prompt("返却予定日（YYYY-MM-DD）を入力", it.dueDate || "");
         if(d === null) return;
-        it.dueDate = d.trim();
-        save(items); render();
+        const dd = d.trim();
+
+        (async () => {
+          try{
+            const res = await jsonp("updateItem", { id: String(it.id), due_date: dd });
+            if(!res || !res.ok){ alert(res && res.error ? res.error : "更新に失敗しました"); return; }
+            await refreshFromServer_();
+          }catch(err){
+            console.error(err);
+            alert("通信エラー：更新に失敗しました");
+          }
+        })();
       };
 
       const historyBtn = document.createElement("button");
@@ -858,9 +997,18 @@
       del.textContent = "削除";
       del.onclick = () => {
         if(!confirm("この行を削除します。よろしいですか？")) return;
-        items = items.filter(x => x.id !== it.id);
-        openHistory.delete(it.id);
-        save(items); render();
+
+        (async () => {
+          try{
+            const res = await jsonp("deleteItem", { id: String(it.id) });
+            if(!res || !res.ok){ alert(res && res.error ? res.error : "削除に失敗しました"); return; }
+            openHistory.delete(it.id);
+            await refreshFromServer_();
+          }catch(err){
+            console.error(err);
+            alert("通信エラー：削除に失敗しました");
+          }
+        })();
       };
 
       acts.appendChild(setDue);
@@ -964,60 +1112,50 @@
   $("priceUnknown").onchange = syncPriceUnknown;
 
   function addItem(thenGoList){
+    // 画面上の入力チェックは従来のまま（表示・文言は変えない）
     const project = $("project").value.trim();
-    if(!project){ alert("現場名／工事名を入力してください（必須）"); $("project").focus(); return; }
+    if(!project){ alert("工事名を入力してください"); return; }
 
     const name = $("name").value.trim();
-    if(!name){ alert("品名を入力してください"); $("name").focus(); return; }
+    if(!name){ alert("品名を入力してください"); return; }
 
-    const qtyTotal = Number($("qty").value || 0);
+    const qtyTotal = Number($("qty").value);
     if(!Number.isFinite(qtyTotal) || qtyTotal <= 0){ alert("数量は1以上で入力してください"); return; }
 
     const billing = $("billing").value;
 
     const priceUnknown = $("priceUnknown").checked;
-    let unitPrice = "";
-    if(!priceUnknown){
-      if($("unitPrice").value !== ""){
-        unitPrice = Number($("unitPrice").value);
-        if(!Number.isFinite(unitPrice) || unitPrice < 0){ alert("単価が不正です"); return; }
-      }
+    const unitPriceStr = $("unitPrice").value.trim();
+    if(!priceUnknown && unitPriceStr !== ""){
+      const up = Number(unitPriceStr);
+      if(!Number.isFinite(up) || up < 0){ alert("単価が不正です"); return; }
     }
 
     const startDate = $("startDate").value;
-    if(!startDate){ alert("借入日を入力してください（必須）"); return; }
+    if(!startDate){ alert("借入日を入力してください"); return; }
 
-    const dueDate = $("dueDate").value;
+    // --- サーバへ登録 ---
+    (async () => {
+      try{
+        const params = toAddParams_();
+        // 必須はGAS側でもチェックされるが、ここでも揃える
+        params.billing = billing;
 
-    const vendor = $("vendor").value.trim();
-    const slipNo = $("slipNo").value.trim();
-    const assetNo = $("assetNo").value.trim();
-    const memo = $("memo").value.trim();
+        const res = await jsonp("addItem", params);
+        if(!res || !res.ok) { alert(res && res.error ? res.error : "登録に失敗しました"); return; }
 
-    items.push({
-      id: uuid(),
-      project, name,
-      qtyTotal,
-      qtyOut: qtyTotal,
-      billing,
-      priceUnknown,
-      unitPrice,
-      vendor, slipNo, assetNo, memo,
-      startDate,
-      dueDate: dueDate || "",
-      returns: [],
-      status: "rented"
-    });
+        await refreshFromServer_();
 
-    save(items);
-    updateNavCount();
-
-    if(thenGoList){
-      clearForm(false);
-      setActiveView("list");
-    }else{
-      clearForm(true);
-    }
+        if(thenGoList){
+          setActiveView("list");
+        }else{
+          clearForm(true);
+        }
+      }catch(err){
+        console.error(err);
+        alert("通信エラー：登録に失敗しました");
+      }
+    })();
   }
 
   $("statusFilter").onchange = render;
@@ -1096,16 +1234,22 @@
 
   $("clearAllBtn").onclick = () => {
     if(!confirm("全データを削除します。元に戻せません。よろしいですか？")) return;
+
+    // 共有（サーバ）運用では一括削除APIが無いので、ここではキャッシュのみ消去します
     items = [];
     openHistory.clear();
-    save(items);
+    saveCache(items);
     updateNavCount();
     render();
+
+    // すぐにサーバの正しい一覧へ戻す
+    refreshFromServer_();
   };
 
   syncPriceUnknown();
   updateNavCount();
   render();
+  refreshFromServer_();
 </script>
 </body>
 </html>
