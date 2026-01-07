@@ -1,0 +1,1111 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>リース品 借入・返却 管理</title>
+  <style>
+    :root{
+      --bg:#ffffff; --fg:#1f2937; --muted:#6b7280;
+      --line:#e5e7eb; --card:#f9fafb; --accent:#2563eb;
+      --danger:#dc2626; --ok:#16a34a; --warn:#f59e0b;
+      --radius:14px;
+      --shadow: 0 8px 24px rgba(0,0,0,.08);
+    }
+    *{ box-sizing:border-box; }
+    body{ margin:0; font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+          background:var(--bg); color:var(--fg); }
+    header{
+      padding:14px 16px 10px;
+      position:sticky; top:0; background:rgba(255,255,255,.92); backdrop-filter: blur(10px);
+      border-bottom:1px solid var(--line); z-index:10;
+    }
+    .wrap{ max-width:1200px; margin:0 auto; padding:0 16px 40px; }
+    h1{ font-size:18px; margin:0 0 8px; }
+    .sub{ color:var(--muted); font-size:12px; margin:0; }
+
+    .nav{
+      display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;
+      margin-top:10px;
+    }
+    .nav .left, .nav .right{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .tabbtn{
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--fg);
+      padding:10px 12px;
+      border-radius:999px;
+      cursor:pointer;
+      font-weight:800;
+    }
+    .tabbtn.active{
+      border-color: rgba(37,99,235,.45);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+    }
+    .chip{
+      font-size:12px; padding:6px 10px; border-radius:999px;
+      border:1px solid var(--line); background:#fff; color:var(--muted);
+    }
+
+    main{ padding-top:16px; }
+    .card{
+      background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+      box-shadow:var(--shadow); padding:14px;
+    }
+    .card h2{ font-size:14px; margin:0 0 10px; }
+    .row{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    @media (max-width: 780px){
+      .row{ grid-template-columns: 1fr; }
+    }
+    label{ display:block; font-size:12px; color:var(--muted); margin:0 0 6px; }
+    input, select{
+      width:100%; padding:10px 10px; border-radius:10px; border:1px solid var(--line);
+      background:#fff; color:var(--fg); outline:none;
+    }
+    input:focus, select:focus{ border-color: rgba(37,99,235,.6); box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
+
+    .btns{ display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; }
+    button{
+      border:none; border-radius:12px; padding:10px 12px; cursor:pointer;
+      background:var(--accent); color:#fff; font-weight:800;
+    }
+    button.secondary{ background:#111827; }
+    button.ghost{ background:#fff; color:var(--fg); border:1px solid var(--line); }
+    button.danger{ background:var(--danger); }
+    button.warn{ background:var(--warn); color:#111827; }
+    button:disabled{ opacity:.5; cursor:not-allowed; }
+
+    .note{ font-size:12px; color:var(--muted); margin-top:8px; line-height:1.5; }
+    .small{ font-size:12px; color:var(--muted); }
+
+    .inline-check{
+      display:flex;
+      align-items:center;
+      justify-content:flex-start;
+      gap:6px;
+      margin-top:6px;
+      font-size:12px;
+      color:var(--muted);
+      white-space:nowrap;
+      line-height:1;
+    }
+    .inline-check input{ width:auto; padding:0; margin:0; }
+
+    .toolbar{
+      display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;
+      margin-bottom:10px;
+    }
+    .toolbar .left, .toolbar .right{
+      display:flex; flex-wrap:wrap; gap:12px; align-items:center;
+      min-width: 0;
+    }
+    .pill{
+      font-size:12px; padding:6px 10px; border-radius:999px; border:1px solid var(--line);
+      background:#fff; color:var(--muted);
+      white-space:nowrap;
+    }
+    .filterInline{
+      display:flex; align-items:center; gap:8px;
+      white-space:nowrap;
+      margin:0;
+      font-size:12px;
+      color:var(--muted);
+    }
+    .filterInline select{
+      width:190px;
+      padding:8px 10px;
+      border-radius:10px;
+    }
+
+    .kpis{ display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 6px; }
+    .kpi{
+      font-size:12px; padding:8px 10px; border-radius:12px; border:1px solid var(--line);
+      background:#fff; color:#374151;
+      display:flex; gap:8px; align-items:center;
+      white-space:nowrap;
+    }
+    .kpi strong{ font-size:13px; }
+
+    .table-wrap{ overflow:auto; border-radius:12px; border:1px solid var(--line); background:#fff; }
+    table{ width:100%; border-collapse:collapse; min-width:1500px; }
+    th, td{ padding:10px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+    th{ position:sticky; top:0; background:#f3f4f6; text-align:left; font-size:12px; color:#374151; }
+    td{ font-size:13px; }
+    tr:hover td{ background:#fafafa; }
+
+    .status{
+      display:inline-flex; gap:6px; align-items:center; font-size:12px; padding:6px 10px;
+      border-radius:999px; border:1px solid var(--line);
+      background:#fff;
+      white-space:nowrap;
+    }
+    .dot{ width:8px; height:8px; border-radius:50%; background:var(--muted); }
+    .status.rented .dot{ background: var(--accent); }
+    .status.returned .dot{ background: var(--ok); }
+    .status.overdue .dot{ background: var(--danger); }
+    .status.due .dot{ background: var(--warn); }
+
+    .mono{ font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; }
+
+    .actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .actions button{ padding:8px 10px; border-radius:10px; font-weight:900; font-size:12px; }
+    .mini{
+      padding:7px 8px;
+      border-radius:10px;
+      border:1px solid var(--line);
+      width:auto;
+      font-size:12px;
+      background:#fff;
+    }
+    .mini.qty{ width:84px; }
+    .mini.date{ width:140px; }
+    .miniWrap{
+      display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+      padding:8px;
+      border:1px dashed var(--line);
+      border-radius:12px;
+      background:#fff;
+    }
+
+    .item-name{
+      white-space: normal;
+      word-break: keep-all;
+      overflow-wrap: anywhere;
+      line-break: strict;
+    }
+
+    .historyRow td{
+      background:#fff;
+      border-bottom:1px solid var(--line);
+      padding:12px;
+    }
+    .historyBox{
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:#fff;
+      padding:12px;
+    }
+    .historyHead{
+      display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;
+      margin-bottom:10px;
+    }
+    .historyHead .title{
+      font-weight:900;
+      font-size:13px;
+    }
+    .historyTable{
+      width:100%;
+      border-collapse:collapse;
+      min-width: 420px;
+    }
+    .historyTable th, .historyTable td{
+      border-bottom:1px solid var(--line);
+      padding:8px 10px;
+      font-size:12px;
+    }
+    .historyTable th{
+      background:#f9fafb;
+      position:static;
+    }
+    .historyEmpty{
+      color:var(--muted);
+      font-size:12px;
+      padding:10px 0 2px;
+    }
+
+    .view{ display:none; }
+    .view.active{ display:block; }
+
+    .hint-inline{ color:var(--muted); font-size:12px; }
+
+    @media (max-width: 780px){
+      .toolbar .right input{ width: 100% !important; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>リース品 借入・返却 管理</h1>
+    
+
+    <div class="nav">
+      <div class="left">
+        <button id="toRegister" class="tabbtn active" type="button">＋ 新規登録</button>
+        <button id="toList" class="tabbtn" type="button">一覧を見る</button>
+        <span class="chip" id="navHint">初期画面：新規登録</span>
+      </div>
+      <div class="right">
+        <span class="chip" id="navCount">—</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- Register -->
+  <section id="viewRegister" class="view active">
+    <div class="card">
+      <h2>新規登録</h2>
+
+      <div style="margin-bottom:10px;">
+        <label for="project">現場名／工事名（必須）</label>
+        <input id="project" placeholder="例：東九州道 熊野江地区 災害復旧工事" />
+      </div>
+
+      <div style="margin-bottom:10px;">
+        <label for="name">品名</label>
+        <input id="name" placeholder="例：仮設材（単管）/ コーン / 発電機 など" />
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="qty">数量（借入）</label>
+          <input id="qty" type="number" min="1" step="1" value="1" />
+        </div>
+        <div>
+          <label for="billing">課金区分</label>
+          <select id="billing">
+            <option value="daily">日割り</option>
+            <option value="monthly">月極</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <label for="unitPrice">単価（円）</label>
+          <input id="unitPrice" type="number" min="0" step="1" placeholder="例：12000" />
+          <div class="inline-check">
+            <input id="priceUnknown" type="checkbox" />
+            <span>※単価不明</span>
+          </div>
+        </div>
+        <div>
+          <label for="vendor">リース会社（任意）</label>
+          <input id="vendor" placeholder="例：〇〇リース" />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <label for="slipNo">貸出伝票No（任意）</label>
+          <input id="slipNo" placeholder="例：R-12345" />
+        </div>
+        <div>
+          <label for="assetNo">管理番号（任意）</label>
+          <input id="assetNo" placeholder="例：機械No/資産タグ/社内管理No" />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <label for="startDate">借入日（必須）</label>
+          <input id="startDate" type="date" />
+        </div>
+        <div>
+          <label for="dueDate">返却予定日（任意・アラート）</label>
+          <input id="dueDate" type="date" />
+        </div>
+      </div>
+
+      <div style="margin-top:10px;">
+        <label for="memo">メモ（任意）</label>
+        <input id="memo" placeholder="例：使用場所/担当者/伝票添付 など" />
+      </div>
+
+      <div class="btns">
+        <button id="addBtn" type="button">登録して一覧へ</button>
+        <button class="ghost" id="addStayBtn" type="button">登録して続けて入力</button>
+        <button class="ghost" id="resetBtn" type="button">入力クリア</button>
+      </div>
+
+      <p class="note">
+        ※ 金額が分からない場合は「単価不明」にチェックを入れる。<br>
+        ※ 概算費は 日割り＝経過日数×単価×数量 / 月極＝利用月数×単価×数量（単価不明は除外）
+      </p>
+    </div>
+  </section>
+
+  <!-- List -->
+  <section id="viewList" class="view">
+    <div class="card">
+      <div class="toolbar">
+        <div class="left">
+          <span class="pill" id="countPill">—</span>
+
+          <!-- ★修正：4択フィルタ -->
+          <div class="filterInline">
+            <span>表示フィルタ</span>
+            <select id="statusFilter">
+              <option value="rented">借入中</option>
+              <option value="all">全て</option>
+              <option value="returned">返却済みのみ</option>
+              <option value="overdue">期限切れのみ</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="right">
+          <select id="projectFilter" style="width: 260px;">
+            <option value="">現場：すべて</option>
+          </select>
+          <input id="q" placeholder="検索（品名/会社/伝票/管理番号/メモ）" style="width:260px;" />
+          <button class="ghost" id="exportViewBtn" type="button">CSV（表示中）</button>
+          <button class="ghost" id="exportAllBtn" type="button">CSV（全件）</button>
+          <button class="danger" id="clearAllBtn" type="button">全データ削除</button>
+        </div>
+      </div>
+
+      <div class="kpis" id="kpis"></div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:160px;">状態</th>
+              <th style="width:220px;">現場名／工事名</th>
+              <th>品名</th>
+              <th style="width:140px;">数量（残/借）</th>
+              <th style="width:120px;">借入日</th>
+              <th style="width:120px;">返却予定日</th>
+              <th style="width:120px;">最終返却日</th>
+              <th style="width:110px;">区分</th>
+              <th style="width:120px;">単価</th>
+              <th style="width:120px;">概算費</th>
+              <th style="width:140px;">会社</th>
+              <th style="width:130px;">伝票No</th>
+              <th style="width:130px;">管理番号</th>
+              <th>メモ</th>
+              <th style="width:430px;">返却操作（行内）</th>
+              <th style="width:240px;">その他</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="btns" style="margin-top:14px;">
+        <button class="ghost" id="backToRegister" type="button">← 新規登録へ戻る</button>
+      </div>
+
+      <p class="note">
+        ・返却履歴は「履歴」で展開。<br>
+        ・誤返却は「戻し(Undo)」で最後の返却を取り消せます（返却済みでも借入中へ戻せます）。
+      </p>
+    </div>
+  </section>
+</main>
+
+<script>
+ 
+  const API_URL = "https://script.google.com/macros/s/AKfycbzhpuvJ3WUljeA8EIuftUFEmlvfW_9Qjbx2FWUkiWCxWQR_SWArdOUJewbI5U86H00/exec";
+  
+  const $ = (id) => document.getElementById(id);
+  const yen = (n) => (n === "" || n === null || n === undefined) ? "" : Number(n).toLocaleString("ja-JP");
+  const z2 = (x)=> String(x).padStart(2,"0");
+  const todayYmd = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${z2(d.getMonth()+1)}-${z2(d.getDate())}`;
+  };
+  const parseYmd = (s) => {
+    if(!s) return null;
+    const [y,m,d] = s.split("-").map(Number);
+    if(!y || !m || !d) return null;
+    return new Date(y, m-1, d);
+  };
+  const fmt = (s) => s || "";
+  const uuid = () => "id-" + crypto.getRandomValues(new Uint32Array(1))[0].toString(16) + "-" + Date.now();
+
+  const daysBetween = (a, b) => {
+    const ms = 24*60*60*1000;
+    const da = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+    const db = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+    return Math.floor((db - da) / ms);
+  };
+
+  const monthsUsedInclusive = (startDateStr, endDateStr) => {
+    const s = parseYmd(startDateStr), e = parseYmd(endDateStr);
+    if(!s || !e) return 0;
+    const sm = s.getFullYear()*12 + s.getMonth();
+    const em = e.getFullYear()*12 + e.getMonth();
+    return (em - sm) + 1;
+  };
+
+  const toYmd = (d) => `${d.getFullYear()}-${z2(d.getMonth()+1)}-${z2(d.getDate())}`;
+  const addDays = (dateObj, n) => {
+    const d = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+    d.setDate(d.getDate() + n);
+    return d;
+  };
+
+  const KEY = "lease_items_v9_statusfilter_4choices";
+  const load = () => {
+    try { return JSON.parse(localStorage.getItem(KEY) || "[]"); }
+    catch { return []; }
+  };
+  const save = (items) => localStorage.setItem(KEY, JSON.stringify(items));
+  let items = load();
+
+  const openHistory = new Set();
+
+  function setActiveView(view){
+    const reg = $("viewRegister");
+    const list = $("viewList");
+    const bReg = $("toRegister");
+    const bList = $("toList");
+
+    if(view === "list"){
+      reg.classList.remove("active");
+      list.classList.add("active");
+      bReg.classList.remove("active");
+      bList.classList.add("active");
+      $("navHint").textContent = "一覧画面";
+      render();
+    }else{
+      list.classList.remove("active");
+      reg.classList.add("active");
+      bList.classList.remove("active");
+      bReg.classList.add("active");
+      $("navHint").textContent = "新規登録画面";
+    }
+    location.hash = view === "list" ? "#list" : "#register";
+  }
+  window.addEventListener("hashchange", () => {
+    const h = (location.hash || "").replace("#","");
+    if(h === "list") setActiveView("list");
+    else setActiveView("register");
+  });
+  $("toRegister").onclick = () => setActiveView("register");
+  $("toList").onclick = () => setActiveView("list");
+  $("backToRegister").onclick = () => setActiveView("register");
+  if((location.hash || "") === "#list") setActiveView("list");
+  else setActiveView("register");
+
+  function lastReturnDate(it){
+    if(!Array.isArray(it.returns) || it.returns.length === 0) return "";
+    const sorted = [...it.returns].sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+    return sorted[sorted.length-1].date || "";
+  }
+
+  function statusBadge(it){
+    if(it.status === "returned") return {cls:"returned", text:"返却済み"};
+    const t = parseYmd(todayYmd());
+    const due = parseYmd(it.dueDate);
+    if(due){
+      const d = daysBetween(t, due);
+      if(d < 0) return {cls:"overdue", text:"期限切れ"};
+      if(d <= 3) return {cls:"due", text:"返却期限迫る"};
+    }
+    return {cls:"rented", text:"借入中"};
+  }
+
+  function estimateCost(it){
+    if(it.priceUnknown) return null;
+    if(it.unitPrice === "" || it.unitPrice === null || it.unitPrice === undefined) return null;
+    const unit = Number(it.unitPrice);
+    if(!Number.isFinite(unit)) return null;
+
+    const start = parseYmd(it.startDate);
+    if(!start) return null;
+
+    const events = (Array.isArray(it.returns) ? it.returns : [])
+      .filter(r => r && r.date && Number(r.qty) > 0)
+      .sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+
+    const qtyTotal = Number(it.qtyTotal ?? 0);
+    if(!Number.isFinite(qtyTotal) || qtyTotal <= 0) return null;
+
+    let sum = 0;
+    let segStart = start;
+    let currentOut = qtyTotal;
+
+    for(const ev of events){
+      const evDate = parseYmd(ev.date);
+      if(!evDate) continue;
+
+      if(evDate >= segStart){
+        if(it.billing === "monthly"){
+          const m = monthsUsedInclusive(toYmd(segStart), ev.date);
+          sum += unit * currentOut * m;
+        }else{
+          const d = Math.max(0, daysBetween(segStart, evDate)) + 1;
+          sum += unit * currentOut * d;
+        }
+      }
+
+      const rqty = Math.max(0, Math.min(currentOut, Number(ev.qty)));
+      currentOut = Math.max(0, currentOut - rqty);
+      segStart = addDays(evDate, 1);
+      if(currentOut === 0) break;
+    }
+
+    if(currentOut > 0){
+      const endStr = (it.status === "returned") ? lastReturnDate(it) : todayYmd();
+      const end = parseYmd(endStr);
+      if(end && end >= segStart){
+        if(it.billing === "monthly"){
+          const m = monthsUsedInclusive(toYmd(segStart), endStr);
+          sum += unit * currentOut * m;
+        }else{
+          const d = Math.max(0, daysBetween(segStart, end)) + 1;
+          sum += unit * currentOut * d;
+        }
+      }
+    }
+
+    return Math.round(sum);
+  }
+
+  function rebuildProjectFilter(){
+    const sel = $("projectFilter");
+    const current = sel.value;
+    const projects = Array.from(new Set(items.map(x => (x.project||"").trim()).filter(Boolean)))
+      .sort((a,b)=>a.localeCompare(b,"ja"));
+
+    sel.innerHTML = "";
+    const optAll = document.createElement("option");
+    optAll.value = "";
+    optAll.textContent = "現場：すべて";
+    sel.appendChild(optAll);
+
+    for(const p of projects){
+      const o = document.createElement("option");
+      o.value = p;
+      o.textContent = `現場：${p}`;
+      sel.appendChild(o);
+    }
+
+    if(projects.includes(current)) sel.value = current;
+    else sel.value = "";
+  }
+
+  // ★修正：4択フィルタ（借入中/全て/返却済みのみ/期限切れのみ）
+  function filteredItems(){
+    const statusFilter = $("statusFilter").value; // rented / all / returned / overdue
+    const q = $("q").value.trim().toLowerCase();
+    const pf = $("projectFilter").value;
+
+    return items.filter(it => {
+      if(pf && (it.project||"") !== pf) return false;
+
+      if(statusFilter === "rented"){
+        if(it.status !== "rented") return false;
+      }else if(statusFilter === "returned"){
+        if(it.status !== "returned") return false;
+      }else if(statusFilter === "overdue"){
+        if(it.status !== "rented") return false;
+        const due = parseYmd(it.dueDate);
+        if(!due) return false;
+        const t = parseYmd(todayYmd());
+        if(daysBetween(t, due) >= 0) return false;
+      }else{
+        // all：全件
+      }
+
+      if(!q) return true;
+      const hay = `${it.project||""} ${it.name||""} ${it.vendor||""} ${it.memo||""} ${it.slipNo||""} ${it.assetNo||""}`.toLowerCase();
+      return hay.includes(q);
+    });
+  }
+
+  function updateNavCount(){
+    const rented = items.filter(x=>x.status==="rented").length;
+    const returned = items.filter(x=>x.status==="returned").length;
+    $("navCount").textContent = `借入中 ${rented} / 返却済 ${returned}`;
+  }
+
+  function updateKPIs(list){
+    const rentedAll = items.filter(x=>x.status==="rented").length;
+    const returnedAll = items.filter(x=>x.status==="returned").length;
+
+    const listRented = list.filter(x=>x.status==="rented");
+    const listReturned = list.filter(x=>x.status==="returned");
+
+    const t = parseYmd(todayYmd());
+    let overdue = 0, dueSoon = 0;
+    for(const it of items){
+      if(it.status !== "rented") continue;
+      const due = parseYmd(it.dueDate);
+      if(!due) continue;
+      const d = daysBetween(t, due);
+      if(d < 0) overdue++;
+      else if(d <= 3) dueSoon++;
+    }
+
+    const sum = (arr) => arr.reduce((acc,it)=>{
+      const c = estimateCost(it);
+      return acc + (c ? c : 0);
+    },0);
+
+    const sumView = sum(list);
+    const sumRentedView = sum(listRented);
+
+    $("kpis").innerHTML = `
+      <div class="kpi">全体：<strong>${rentedAll}</strong> 借入中 ／ <strong>${returnedAll}</strong> 返却済</div>
+      <div class="kpi">アラート：<strong style="color:var(--danger)">${overdue}</strong> 期限切れ ／ <strong style="color:var(--warn)">${dueSoon}</strong> 迫る</div>
+      <div class="kpi">表示中：<strong>${listRented.length}</strong> 借入中 ／ <strong>${listReturned.length}</strong> 返却済</div>
+      <div class="kpi">概算（表示中）：<strong class="mono">${yen(sumView)}</strong> 円</div>
+      <div class="kpi">概算（表示中・借入中）：<strong class="mono">${yen(sumRentedView)}</strong> 円</div>
+    `;
+  }
+
+  function validateReturnInput(max, qtyStr, dateStr){
+    const qty = Number(qtyStr);
+    if(!Number.isFinite(qty) || qty <= 0) return {ok:false, msg:"返却数量は1以上で入力してください"};
+    if(qty > max) return {ok:false, msg:`返却数量が残数量(${max})を超えています`};
+    const d = parseYmd(dateStr);
+    if(!d) return {ok:false, msg:"返却日が不正です（YYYY-MM-DD）"};
+    return {ok:true, qty, date: dateStr};
+  }
+
+  function applyReturn(it, qty, dateStr){
+    if(!Array.isArray(it.returns)) it.returns = [];
+    it.returns.push({ date: dateStr, qty });
+    it.qtyOut = Math.max(0, Number(it.qtyOut) - qty);
+    it.status = (it.qtyOut === 0) ? "returned" : "rented";
+  }
+
+  function undoLastReturn(it){
+    if(!Array.isArray(it.returns) || it.returns.length === 0){
+      alert("戻せる返却履歴がありません。");
+      return;
+    }
+    if(!confirm("最後の返却を取り消します。よろしいですか？")) return;
+
+    const last = it.returns.pop();
+    const qty = Number(last.qty) || 0;
+
+    const total = Number(it.qtyTotal) || 0;
+    it.qtyOut = Math.min(total, Math.max(0, Number(it.qtyOut) + qty));
+    it.status = (it.qtyOut === 0) ? "returned" : "rented";
+
+    save(items);
+    render();
+  }
+
+  function forceBackToRented(it){
+    if(!confirm("返却済みを借入中に戻します（残数量を借入数量に戻し、返却履歴は残します）。よろしいですか？")) return;
+    const total = Number(it.qtyTotal) || 0;
+    it.qtyOut = total;
+    it.status = "rented";
+    save(items);
+    render();
+  }
+
+  function toggleHistory(id){
+    if(openHistory.has(id)) openHistory.delete(id);
+    else openHistory.add(id);
+    render();
+  }
+
+  function render(){
+    updateNavCount();
+    rebuildProjectFilter();
+
+    const list = filteredItems();
+
+    const rentedCount = items.filter(x=>x.status==="rented").length;
+    const returnedCount = items.filter(x=>x.status==="returned").length;
+
+    const filterLabel =
+      $("statusFilter").value === "rented" ? "借入中" :
+      $("statusFilter").value === "returned" ? "返却済みのみ" :
+      $("statusFilter").value === "overdue" ? "期限切れのみ" : "全て";
+
+    $("countPill").textContent = `借入中：${rentedCount}件 ／ 返却済：${returnedCount}件（表示：${list.length}件・${filterLabel}）`;
+
+    updateKPIs(list);
+
+    const sorted = [...list].sort((a,b)=>{
+      if(a.status !== b.status) return a.status === "rented" ? -1 : 1;
+      const ad = a.dueDate || "9999-12-31";
+      const bd = b.dueDate || "9999-12-31";
+      if(ad !== bd) return ad.localeCompare(bd);
+      return (b.startDate||"").localeCompare(a.startDate||"");
+    });
+
+    const tbody = $("tbody");
+    tbody.innerHTML = "";
+
+    for(const it of sorted){
+      const tr = document.createElement("tr");
+
+      const badge = statusBadge(it);
+      const statusTd = document.createElement("td");
+      const status = document.createElement("span");
+      status.className = "status " + badge.cls;
+      status.innerHTML = `<span class="dot"></span>${badge.text}`;
+      statusTd.appendChild(status);
+
+      const projectTd = document.createElement("td"); projectTd.textContent = it.project || "";
+      const nameTd = document.createElement("td"); nameTd.className = "item-name"; nameTd.textContent = it.name || "";
+
+      const qtyTd = document.createElement("td");
+      qtyTd.className = "mono";
+      const total = Number(it.qtyTotal) || 0;
+      const out = Number(it.qtyOut) || 0;
+      qtyTd.textContent = `${out} / ${total}`;
+
+      const startTd = document.createElement("td"); startTd.className = "mono"; startTd.textContent = fmt(it.startDate);
+      const dueTd = document.createElement("td"); dueTd.className = "mono"; dueTd.textContent = fmt(it.dueDate);
+      const lastTd = document.createElement("td"); lastTd.className = "mono"; lastTd.textContent = fmt(lastReturnDate(it));
+      const billingTd = document.createElement("td"); billingTd.textContent = it.billing === "monthly" ? "月極" : "日割り";
+
+      const priceTd = document.createElement("td");
+      priceTd.className = "mono";
+      if(it.priceUnknown) priceTd.textContent = "不明";
+      else priceTd.textContent = (it.unitPrice === "" ? "" : `${yen(it.unitPrice)} 円`);
+
+      const estTd = document.createElement("td");
+      estTd.className = "mono";
+      const est = estimateCost(it);
+      estTd.textContent = (est === null) ? "—" : `${yen(est)} 円`;
+
+      const vendorTd = document.createElement("td"); vendorTd.textContent = it.vendor || "";
+      const slipTd = document.createElement("td"); slipTd.className = "mono"; slipTd.textContent = it.slipNo || "";
+      const assetTd = document.createElement("td"); assetTd.className = "mono"; assetTd.textContent = it.assetNo || "";
+      const memoTd = document.createElement("td"); memoTd.textContent = it.memo || "";
+
+      const retTd = document.createElement("td");
+      const wrap = document.createElement("div");
+      wrap.className = "miniWrap";
+
+      const qtyInput = document.createElement("input");
+      qtyInput.type = "number";
+      qtyInput.min = "1";
+      qtyInput.step = "1";
+      qtyInput.value = out > 0 ? "1" : "0";
+      qtyInput.className = "mini qty";
+      qtyInput.placeholder = "返却数";
+
+      const dateInput = document.createElement("input");
+      dateInput.type = "date";
+      dateInput.value = todayYmd();
+      dateInput.className = "mini date";
+
+      const btnPartial = document.createElement("button");
+      btnPartial.className = "ghost";
+      btnPartial.textContent = "一部返却";
+      btnPartial.disabled = (it.status === "returned" || out === 0);
+
+      const btnAll = document.createElement("button");
+      btnAll.className = "secondary";
+      btnAll.textContent = "全部返却";
+      btnAll.disabled = (it.status === "returned" || out === 0);
+
+      const btnUndo = document.createElement("button");
+      btnUndo.className = "warn";
+      btnUndo.textContent = "戻し(Undo)";
+      btnUndo.disabled = !(Array.isArray(it.returns) && it.returns.length > 0);
+
+      const hint = document.createElement("span");
+      hint.className = "hint-inline";
+      hint.textContent = `残${out}に対して返却`;
+
+      btnPartial.onclick = () => {
+        const v = validateReturnInput(out, qtyInput.value, dateInput.value);
+        if(!v.ok){ alert(v.msg); return; }
+        applyReturn(it, v.qty, v.date);
+        save(items); render();
+      };
+
+      btnAll.onclick = () => {
+        const v = validateReturnInput(out, String(out), dateInput.value);
+        if(!v.ok){ alert(v.msg); return; }
+        applyReturn(it, out, v.date);
+        save(items); render();
+      };
+
+      btnUndo.onclick = () => undoLastReturn(it);
+
+      wrap.appendChild(qtyInput);
+      wrap.appendChild(dateInput);
+      wrap.appendChild(btnPartial);
+      wrap.appendChild(btnAll);
+      wrap.appendChild(btnUndo);
+      wrap.appendChild(hint);
+
+      retTd.appendChild(wrap);
+
+      const actTd = document.createElement("td");
+      const acts = document.createElement("div");
+      acts.className = "actions";
+
+      const setDue = document.createElement("button");
+      setDue.className = "ghost";
+      setDue.textContent = "予定日入力";
+      setDue.onclick = () => {
+        const d = prompt("返却予定日（YYYY-MM-DD）を入力", it.dueDate || "");
+        if(d === null) return;
+        it.dueDate = d.trim();
+        save(items); render();
+      };
+
+      const historyBtn = document.createElement("button");
+      historyBtn.className = "ghost";
+      historyBtn.textContent = openHistory.has(it.id) ? "履歴を閉じる" : "履歴";
+      historyBtn.onclick = () => toggleHistory(it.id);
+
+      const backBtn = document.createElement("button");
+      backBtn.className = "ghost";
+      backBtn.textContent = "借入へ戻す";
+      backBtn.disabled = (it.status !== "returned");
+      backBtn.onclick = () => forceBackToRented(it);
+
+      const del = document.createElement("button");
+      del.className = "danger";
+      del.textContent = "削除";
+      del.onclick = () => {
+        if(!confirm("この行を削除します。よろしいですか？")) return;
+        items = items.filter(x => x.id !== it.id);
+        openHistory.delete(it.id);
+        save(items); render();
+      };
+
+      acts.appendChild(setDue);
+      acts.appendChild(historyBtn);
+      acts.appendChild(backBtn);
+      acts.appendChild(del);
+      actTd.appendChild(acts);
+
+      [
+        statusTd,projectTd,nameTd,qtyTd,startTd,dueTd,lastTd,billingTd,priceTd,estTd,
+        vendorTd,slipTd,assetTd,memoTd,retTd,actTd
+      ].forEach(td=>tr.appendChild(td));
+
+      tbody.appendChild(tr);
+
+      if(openHistory.has(it.id)){
+        const htr = document.createElement("tr");
+        htr.className = "historyRow";
+        const htd = document.createElement("td");
+        htd.colSpan = 16;
+
+        const box = document.createElement("div");
+        box.className = "historyBox";
+
+        const head = document.createElement("div");
+        head.className = "historyHead";
+
+        const ttl = document.createElement("div");
+        ttl.className = "title";
+        const returnedQty = Math.max(0, (Number(it.qtyTotal)||0) - (Number(it.qtyOut)||0));
+        ttl.textContent = `返却履歴（返却済 ${returnedQty} ／ 残 ${Number(it.qtyOut)||0} ／ 借入 ${Number(it.qtyTotal)||0}）`;
+
+        const right = document.createElement("div");
+        right.className = "small mono";
+        right.textContent = `最終返却日：${fmt(lastReturnDate(it)) || "—"}`;
+
+        head.appendChild(ttl);
+        head.appendChild(right);
+        box.appendChild(head);
+
+        const arr = Array.isArray(it.returns) ? [...it.returns] : [];
+        arr.sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+
+        if(arr.length === 0){
+          const empty = document.createElement("div");
+          empty.className = "historyEmpty";
+          empty.textContent = "返却履歴はまだありません。";
+          box.appendChild(empty);
+        }else{
+          const t = document.createElement("table");
+          t.className = "historyTable";
+          t.innerHTML = `
+            <thead>
+              <tr><th style="width:160px;">返却日</th><th style="width:120px;">数量</th><th>メモ</th></tr>
+            </thead>
+            <tbody></tbody>
+          `;
+          const tb = t.querySelector("tbody");
+          for(const r of arr){
+            const trr = document.createElement("tr");
+            const td1 = document.createElement("td"); td1.className="mono"; td1.textContent = r.date || "";
+            const td2 = document.createElement("td"); td2.className="mono"; td2.textContent = r.qty ?? "";
+            const td3 = document.createElement("td"); td3.className="small"; td3.textContent = r.memo || "";
+            trr.appendChild(td1); trr.appendChild(td2); trr.appendChild(td3);
+            tb.appendChild(trr);
+          }
+          box.appendChild(t);
+        }
+
+        htd.appendChild(box);
+        htr.appendChild(htd);
+        tbody.appendChild(htr);
+      }
+    }
+  }
+
+  function clearForm(keepProject=false){
+    const p = $("project").value;
+    $("project").value = keepProject ? p : "";
+    $("name").value = "";
+    $("qty").value = 1;
+    $("billing").value = "daily";
+    $("unitPrice").value = "";
+    $("priceUnknown").checked = false;
+    $("unitPrice").disabled = false;
+
+    $("vendor").value = "";
+    $("slipNo").value = "";
+    $("assetNo").value = "";
+    $("startDate").value = "";
+    $("dueDate").value = "";
+    $("memo").value = "";
+    $("name").focus();
+  }
+
+  function syncPriceUnknown(){
+    const unk = $("priceUnknown").checked;
+    $("unitPrice").disabled = unk;
+    if(unk) $("unitPrice").value = "";
+  }
+  $("priceUnknown").onchange = syncPriceUnknown;
+
+  function addItem(thenGoList){
+    const project = $("project").value.trim();
+    if(!project){ alert("現場名／工事名を入力してください（必須）"); $("project").focus(); return; }
+
+    const name = $("name").value.trim();
+    if(!name){ alert("品名を入力してください"); $("name").focus(); return; }
+
+    const qtyTotal = Number($("qty").value || 0);
+    if(!Number.isFinite(qtyTotal) || qtyTotal <= 0){ alert("数量は1以上で入力してください"); return; }
+
+    const billing = $("billing").value;
+
+    const priceUnknown = $("priceUnknown").checked;
+    let unitPrice = "";
+    if(!priceUnknown){
+      if($("unitPrice").value !== ""){
+        unitPrice = Number($("unitPrice").value);
+        if(!Number.isFinite(unitPrice) || unitPrice < 0){ alert("単価が不正です"); return; }
+      }
+    }
+
+    const startDate = $("startDate").value;
+    if(!startDate){ alert("借入日を入力してください（必須）"); return; }
+
+    const dueDate = $("dueDate").value;
+
+    const vendor = $("vendor").value.trim();
+    const slipNo = $("slipNo").value.trim();
+    const assetNo = $("assetNo").value.trim();
+    const memo = $("memo").value.trim();
+
+    items.push({
+      id: uuid(),
+      project, name,
+      qtyTotal,
+      qtyOut: qtyTotal,
+      billing,
+      priceUnknown,
+      unitPrice,
+      vendor, slipNo, assetNo, memo,
+      startDate,
+      dueDate: dueDate || "",
+      returns: [],
+      status: "rented"
+    });
+
+    save(items);
+    updateNavCount();
+
+    if(thenGoList){
+      clearForm(false);
+      setActiveView("list");
+    }else{
+      clearForm(true);
+    }
+  }
+
+  $("statusFilter").onchange = render;
+  $("projectFilter").onchange = render;
+  $("q").oninput = render;
+
+  $("addBtn").onclick = () => addItem(true);
+  $("addStayBtn").onclick = () => addItem(false);
+  $("resetBtn").onclick = () => clearForm(false);
+
+  function toCsv(rows){
+    const esc = (v) => {
+      const s = (v ?? "").toString();
+      if(/[",\n]/.test(s)) return `"${s.replace(/"/g,'""')}"`;
+      return s;
+    };
+    return rows.map(r => r.map(esc).join(",")).join("\n");
+  }
+  function downloadCsv(filename, rows){
+    const csv = toCsv(rows);
+    const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+  function returnsSummary(it){
+    if(!Array.isArray(it.returns) || it.returns.length===0) return "";
+    const s = [...it.returns].sort((a,b)=>(a.date||"").localeCompare(b.date||""))
+      .map(r => `${r.date}:${r.qty}`).join(" | ");
+    return s;
+  }
+  function exportRows(list){
+    const header = [
+      "状態","現場名/工事名","品名",
+      "数量(借入)","数量(残)","数量(返却済)",
+      "借入日","返却予定日","最終返却日",
+      "区分","単価","概算費",
+      "会社","貸出伝票No","管理番号","メモ",
+      "返却履歴(date:qty)"
+    ];
+    const rows = list.map(it => {
+      const est = estimateCost(it);
+      const total = Number(it.qtyTotal)||0;
+      const out = Number(it.qtyOut)||0;
+      const ret = Math.max(0, total - out);
+      return [
+        it.status === "returned" ? "返却済み" : "借入中",
+        it.project,
+        it.name,
+        total,
+        out,
+        ret,
+        it.startDate,
+        it.dueDate || "",
+        lastReturnDate(it) || "",
+        it.billing === "monthly" ? "月極" : "日割り",
+        it.priceUnknown ? "不明" : (it.unitPrice === "" ? "" : it.unitPrice),
+        est === null ? "" : est,
+        it.vendor || "",
+        it.slipNo || "",
+        it.assetNo || "",
+        it.memo || "",
+        returnsSummary(it)
+      ];
+    });
+    return [header, ...rows];
+  }
+
+  $("exportViewBtn").onclick = () => downloadCsv(`lease_items_view_${todayYmd()}.csv`, exportRows(filteredItems()));
+  $("exportAllBtn").onclick = () => downloadCsv(`lease_items_all_${todayYmd()}.csv`, exportRows(items));
+
+  $("clearAllBtn").onclick = () => {
+    if(!confirm("全データを削除します。元に戻せません。よろしいですか？")) return;
+    items = [];
+    openHistory.clear();
+    save(items);
+    updateNavCount();
+    render();
+  };
+
+  syncPriceUnknown();
+  updateNavCount();
+  render();
+</script>
+</body>
+</html>
