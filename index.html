@@ -227,7 +227,6 @@
 <header>
   <div class="wrap">
     <h1>リース品 借入・返却 管理</h1>
-    
 
     <div class="nav">
       <div class="left">
@@ -334,7 +333,6 @@
         <div class="left">
           <span class="pill" id="countPill">—</span>
 
-          <!-- ★修正：4択フィルタ -->
           <div class="filterInline">
             <span>表示フィルタ</span>
             <select id="statusFilter">
@@ -398,23 +396,38 @@
 </main>
 
 <script>
- 
   const API_URL = "https://script.google.com/macros/s/AKfycbyQs8PYvWD7qyzXjNL1sgaKpjzifSSGU8G3vUtC4Q61-nAXQCGKphf7jGRZGK5p5x-0/exec";
-  
+
   const $ = (id) => document.getElementById(id);
   const yen = (n) => (n === "" || n === null || n === undefined) ? "" : Number(n).toLocaleString("ja-JP");
   const z2 = (x)=> String(x).padStart(2,"0");
-  const todayYmd = () => {
-    const d = new Date();
-    return `${d.getFullYear()}-${z2(d.getMonth()+1)}-${z2(d.getDate())}`;
+
+  const toYmd = (d) => `${d.getFullYear()}-${z2(d.getMonth()+1)}-${z2(d.getDate())}`;
+
+  const todayYmd = () => toYmd(new Date());
+
+  // ★ここが重要：Date/ISO/文字列を「表示用YYYY-MM-DD」に正規化
+  const fmt = (v) => {
+    if (!v) return "";
+    if (v instanceof Date && !isNaN(v)) return toYmd(v);
+    const s = String(v);
+    const m = s.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (m) return m[1];
+    return s;
   };
-  const parseYmd = (s) => {
-    if(!s) return null;
-    const [y,m,d] = s.split("-").map(Number);
-    if(!y || !m || !d) return null;
-    return new Date(y, m-1, d);
+
+  // ★ここが重要：Date/ISO/"YYYY-MM-DD ..." を全部受ける
+  const parseYmd = (v) => {
+    if (!v) return null;
+    if (v instanceof Date && !isNaN(v)) return new Date(v.getFullYear(), v.getMonth(), v.getDate());
+    const s = String(v);
+    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return null;
+    const y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]);
+    if (!y || !mo || !d) return null;
+    return new Date(y, mo - 1, d);
   };
-  const fmt = (s) => s || "";
+
   const uuid = () => "id-" + crypto.getRandomValues(new Uint32Array(1))[0].toString(16) + "-" + Date.now();
 
   const daysBetween = (a, b) => {
@@ -432,16 +445,15 @@
     return (em - sm) + 1;
   };
 
-  const toYmd = (d) => `${d.getFullYear()}-${z2(d.getMonth()+1)}-${z2(d.getDate())}`;
   const addDays = (dateObj, n) => {
     const d = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
     d.setDate(d.getDate() + n);
     return d;
   };
 
-  const KEY = "lease_items_cache_v1"; // オフライン表示用のキャッシュ（サーバが正）
+  const KEY = "lease_items_cache_v1";
 
-  // --- JSONP client (GAS推奨) ---
+  // --- JSONP client ---
   function jsonp(action, params = {}) {
     return new Promise((resolve, reject) => {
       const cb = "cb_" + Math.random().toString(16).slice(2);
@@ -471,7 +483,7 @@
     try { localStorage.setItem(KEY, JSON.stringify(items)); } catch {}
   };
 
-  // --- mapping: sheet -> UI ---
+  // --- mapping: sheet -> UI（★日付は必ずfmtで正規化） ---
   function fromSheet_(r){
     return {
       id: String(r.id ?? ""),
@@ -486,10 +498,12 @@
       slipNo: r.slip_no || "",
       assetNo: r.asset_no || "",
       memo: r.memo || "",
-      startDate: r.start_date || "",
-      dueDate: r.due_date || "",
+      startDate: fmt(r.start_date),
+      dueDate: fmt(r.due_date),
       status: r.status || "rented",
-      returns: Array.isArray(r.returns) ? r.returns.map(x => ({ date: x.date, qty: Number(x.qty || 0) })) : []
+      returns: Array.isArray(r.returns)
+        ? r.returns.map(x => ({ date: fmt(x.date), qty: Number(x.qty || 0) }))
+        : []
     };
   }
 
@@ -523,12 +537,11 @@
       render();
     }catch(err){
       console.warn("refresh failed:", err);
-      // オフラインでも使えるようキャッシュ表示は維持
+      // キャッシュ表示維持
     }
   }
 
   let items = loadCache();
-
   const openHistory = new Set();
 
   function setActiveView(view){
@@ -553,14 +566,17 @@
     }
     location.hash = view === "list" ? "#list" : "#register";
   }
+
   window.addEventListener("hashchange", () => {
     const h = (location.hash || "").replace("#","");
     if(h === "list") setActiveView("list");
     else setActiveView("register");
   });
+
   $("toRegister").onclick = () => setActiveView("register");
   $("toList").onclick = () => setActiveView("list");
   $("backToRegister").onclick = () => setActiveView("register");
+
   if((location.hash || "") === "#list") setActiveView("list");
   else setActiveView("register");
 
@@ -662,9 +678,8 @@
     else sel.value = "";
   }
 
-  // ★修正：4択フィルタ（借入中/全て/返却済みのみ/期限切れのみ）
   function filteredItems(){
-    const statusFilter = $("statusFilter").value; // rented / all / returned / overdue
+    const statusFilter = $("statusFilter").value;
     const q = $("q").value.trim().toLowerCase();
     const pf = $("projectFilter").value;
 
@@ -682,7 +697,7 @@
         const t = parseYmd(todayYmd());
         if(daysBetween(t, due) >= 0) return false;
       }else{
-        // all：全件
+        // all
       }
 
       if(!q) return true;
@@ -738,27 +753,22 @@
     if(qty > max) return {ok:false, msg:`返却数量が残数量(${max})を超えています`};
     const d = parseYmd(dateStr);
     if(!d) return {ok:false, msg:"返却日が不正です（YYYY-MM-DD）"};
-    return {ok:true, qty, date: dateStr};
+    return {ok:true, qty, date: fmt(dateStr)};
   }
 
   function applyReturn(it, qty, dateStr){
-    // 画面の挙動はそのまま（ローカルで即時反映）＋サーバへ確定
     if(!Array.isArray(it.returns)) it.returns = [];
-    it.returns.push({ date: dateStr, qty });
+    it.returns.push({ date: fmt(dateStr), qty });
     it.qtyOut = Math.max(0, Number(it.qtyOut) - qty);
     it.status = (it.qtyOut === 0) ? "returned" : "rented";
 
-    // いったん表示更新（見た目は従来通り）
     updateNavCount();
     render();
 
-    // サーバで返却処理（失敗時はサーバ再取得で整合）
     (async () => {
       try{
-        const res = await jsonp("returnItem", { id: String(it.id), qty: String(qty), return_date: String(dateStr) });
-        if(!res || !res.ok){
-          alert(res && res.error ? res.error : "返却に失敗しました");
-        }
+        const res = await jsonp("returnItem", { id: String(it.id), qty: String(qty), return_date: fmt(dateStr) });
+        if(!res || !res.ok) alert(res && res.error ? res.error : "返却に失敗しました");
         await refreshFromServer_();
       }catch(err){
         console.error(err);
@@ -788,9 +798,7 @@
     (async () => {
       try{
         const res = await jsonp("undoReturn", { id: String(it.id) });
-        if(!res || !res.ok){
-          alert(res && res.error ? res.error : "返却取消に失敗しました");
-        }
+        if(!res || !res.ok) alert(res && res.error ? res.error : "返却取消に失敗しました");
         await refreshFromServer_();
       }catch(err){
         console.error(err);
@@ -812,9 +820,7 @@
     (async () => {
       try{
         const res = await jsonp("backToRented", { id: String(it.id) });
-        if(!res || !res.ok){
-          alert(res && res.error ? res.error : "借入へ戻す処理に失敗しました");
-        }
+        if(!res || !res.ok) alert(res && res.error ? res.error : "借入へ戻す処理に失敗しました");
         await refreshFromServer_();
       }catch(err){
         console.error(err);
@@ -967,7 +973,7 @@
       setDue.onclick = () => {
         const d = prompt("返却予定日（YYYY-MM-DD）を入力", it.dueDate || "");
         if(d === null) return;
-        const dd = d.trim();
+        const dd = (d || "").trim();
 
         (async () => {
           try{
@@ -1069,7 +1075,7 @@
           const tb = t.querySelector("tbody");
           for(const r of arr){
             const trr = document.createElement("tr");
-            const td1 = document.createElement("td"); td1.className="mono"; td1.textContent = r.date || "";
+            const td1 = document.createElement("td"); td1.className="mono"; td1.textContent = fmt(r.date) || "";
             const td2 = document.createElement("td"); td2.className="mono"; td2.textContent = r.qty ?? "";
             const td3 = document.createElement("td"); td3.className="small"; td3.textContent = r.memo || "";
             trr.appendChild(td1); trr.appendChild(td2); trr.appendChild(td3);
@@ -1112,7 +1118,6 @@
   $("priceUnknown").onchange = syncPriceUnknown;
 
   function addItem(thenGoList){
-    // 画面上の入力チェックは従来のまま（表示・文言は変えない）
     const project = $("project").value.trim();
     if(!project){ alert("工事名を入力してください"); return; }
 
@@ -1121,8 +1126,6 @@
 
     const qtyTotal = Number($("qty").value);
     if(!Number.isFinite(qtyTotal) || qtyTotal <= 0){ alert("数量は1以上で入力してください"); return; }
-
-    const billing = $("billing").value;
 
     const priceUnknown = $("priceUnknown").checked;
     const unitPriceStr = $("unitPrice").value.trim();
@@ -1134,23 +1137,16 @@
     const startDate = $("startDate").value;
     if(!startDate){ alert("借入日を入力してください"); return; }
 
-    // --- サーバへ登録 ---
     (async () => {
       try{
         const params = toAddParams_();
-        // 必須はGAS側でもチェックされるが、ここでも揃える
-        params.billing = billing;
-
         const res = await jsonp("addItem", params);
         if(!res || !res.ok) { alert(res && res.error ? res.error : "登録に失敗しました"); return; }
 
         await refreshFromServer_();
 
-        if(thenGoList){
-          setActiveView("list");
-        }else{
-          clearForm(true);
-        }
+        if(thenGoList) setActiveView("list");
+        else clearForm(true);
       }catch(err){
         console.error(err);
         alert("通信エラー：登録に失敗しました");
@@ -1189,7 +1185,7 @@
   function returnsSummary(it){
     if(!Array.isArray(it.returns) || it.returns.length===0) return "";
     const s = [...it.returns].sort((a,b)=>(a.date||"").localeCompare(b.date||""))
-      .map(r => `${r.date}:${r.qty}`).join(" | ");
+      .map(r => `${fmt(r.date)}:${r.qty}`).join(" | ");
     return s;
   }
   function exportRows(list){
@@ -1213,9 +1209,9 @@
         total,
         out,
         ret,
-        it.startDate,
-        it.dueDate || "",
-        lastReturnDate(it) || "",
+        fmt(it.startDate),
+        fmt(it.dueDate) || "",
+        fmt(lastReturnDate(it)) || "",
         it.billing === "monthly" ? "月極" : "日割り",
         it.priceUnknown ? "不明" : (it.unitPrice === "" ? "" : it.unitPrice),
         est === null ? "" : est,
@@ -1235,14 +1231,11 @@
   $("clearAllBtn").onclick = () => {
     if(!confirm("全データを削除します。元に戻せません。よろしいですか？")) return;
 
-    // 共有（サーバ）運用では一括削除APIが無いので、ここではキャッシュのみ消去します
     items = [];
     openHistory.clear();
     saveCache(items);
     updateNavCount();
     render();
-
-    // すぐにサーバの正しい一覧へ戻す
     refreshFromServer_();
   };
 
