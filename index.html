@@ -8,1241 +8,770 @@
     :root{
       --bg:#ffffff; --fg:#1f2937; --muted:#6b7280;
       --line:#e5e7eb; --card:#f9fafb; --accent:#2563eb;
-      --danger:#dc2626; --ok:#16a34a; --warn:#f59e0b;
+      --danger:#dc2626; --ok:#16a34a;
       --radius:14px;
       --shadow: 0 8px 24px rgba(0,0,0,.08);
     }
     *{ box-sizing:border-box; }
-    body{ margin:0; font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
-          background:var(--bg); color:var(--fg); }
-    header{
-      padding:14px 16px 10px;
-      position:sticky; top:0; background:rgba(255,255,255,.92); backdrop-filter: blur(10px);
-      border-bottom:1px solid var(--line); z-index:10;
-    }
-    .wrap{ max-width:1200px; margin:0 auto; padding:0 16px 40px; }
-    h1{ font-size:18px; margin:0 0 8px; }
-    .sub{ color:var(--muted); font-size:12px; margin:0; }
-
-    .nav{
-      display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;
-      margin-top:10px;
-    }
-    .nav .left, .nav .right{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    .tabbtn{
-      border:1px solid var(--line);
-      background:#fff;
-      color:var(--fg);
-      padding:10px 12px;
-      border-radius:999px;
-      cursor:pointer;
-      font-weight:800;
-    }
-    .tabbtn.active{
-      border-color: rgba(37,99,235,.45);
-      box-shadow: 0 0 0 3px rgba(37,99,235,.12);
-    }
-    .chip{
-      font-size:12px; padding:6px 10px; border-radius:999px;
-      border:1px solid var(--line); background:#fff; color:var(--muted);
-    }
-
-    main{ padding-top:16px; }
-    .card{
-      background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
-      box-shadow:var(--shadow); padding:14px;
-    }
-    .card h2{ font-size:14px; margin:0 0 10px; }
-    .row{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
-    @media (max-width: 780px){
-      .row{ grid-template-columns: 1fr; }
-    }
-    label{ display:block; font-size:12px; color:var(--muted); margin:0 0 6px; }
-    input, select{
-      width:100%; padding:10px 10px; border-radius:10px; border:1px solid var(--line);
-      background:#fff; color:var(--fg); outline:none;
-    }
-    input:focus, select:focus{ border-color: rgba(37,99,235,.6); box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
-
-    .btns{ display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; }
-    button{
-      border:none; border-radius:12px; padding:10px 12px; cursor:pointer;
-      background:var(--accent); color:#fff; font-weight:800;
-    }
-    button.secondary{ background:#111827; }
-    button.ghost{ background:#fff; color:var(--fg); border:1px solid var(--line); }
-    button.danger{ background:var(--danger); }
-    button.warn{ background:var(--warn); color:#111827; }
-    button:disabled{ opacity:.5; cursor:not-allowed; }
-
-    .note{ font-size:12px; color:var(--muted); margin-top:8px; line-height:1.5; }
-    .small{ font-size:12px; color:var(--muted); }
-
-    .inline-check{
-      display:flex;
-      align-items:center;
-      justify-content:flex-start;
-      gap:6px;
-      margin-top:6px;
-      font-size:12px;
-      color:var(--muted);
-      white-space:nowrap;
-      line-height:1;
-    }
-    .inline-check input{ width:auto; padding:0; margin:0; }
-
-    .toolbar{
-      display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;
-      margin-bottom:10px;
-    }
-    .toolbar .left, .toolbar .right{
-      display:flex; flex-wrap:wrap; gap:12px; align-items:center;
-      min-width: 0;
-    }
-    .pill{
-      font-size:12px; padding:6px 10px; border-radius:999px; border:1px solid var(--line);
-      background:#fff; color:var(--muted);
-      white-space:nowrap;
-    }
-    .filterInline{
-      display:flex; align-items:center; gap:8px;
-      white-space:nowrap;
-      margin:0;
-      font-size:12px;
-      color:var(--muted);
-    }
-    .filterInline select{
-      width:190px;
-      padding:8px 10px;
-      border-radius:10px;
-    }
-
-    .kpis{ display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 6px; }
-    .kpi{
-      font-size:12px; padding:8px 10px; border-radius:12px; border:1px solid var(--line);
-      background:#fff; color:#374151;
-      display:flex; gap:8px; align-items:center;
-      white-space:nowrap;
-    }
-    .kpi strong{ font-size:13px; }
-
-    .table-wrap{ overflow:auto; border-radius:12px; border:1px solid var(--line); background:#fff; }
-    table{ width:100%; border-collapse:collapse; min-width:1500px; }
-    th, td{ padding:10px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
-    th{ position:sticky; top:0; background:#f3f4f6; text-align:left; font-size:12px; color:#374151; }
-    td{ font-size:13px; }
-    tr:hover td{ background:#fafafa; }
-
-    .status{
-      display:inline-flex; gap:6px; align-items:center; font-size:12px; padding:6px 10px;
-      border-radius:999px; border:1px solid var(--line);
-      background:#fff;
-      white-space:nowrap;
-    }
-    .dot{ width:8px; height:8px; border-radius:50%; background:var(--muted); }
-    .status.rented .dot{ background: var(--accent); }
-    .status.returned .dot{ background: var(--ok); }
-    .status.overdue .dot{ background: var(--danger); }
-    .status.due .dot{ background: var(--warn); }
-
-    .mono{ font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; }
-
-    .actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-    .actions button{ padding:8px 10px; border-radius:10px; font-weight:900; font-size:12px; }
-    .mini{
-      padding:7px 8px;
-      border-radius:10px;
-      border:1px solid var(--line);
-      width:auto;
-      font-size:12px;
-      background:#fff;
-    }
-    .mini.qty{ width:84px; }
-    .mini.date{ width:140px; }
-    .miniWrap{
-      display:flex; gap:8px; flex-wrap:wrap; align-items:center;
-      padding:8px;
-      border:1px dashed var(--line);
-      border-radius:12px;
-      background:#fff;
-    }
-
-    .item-name{
-      white-space: normal;
-      word-break: keep-all;
-      overflow-wrap: anywhere;
-      line-break: strict;
-    }
-
-    .historyRow td{
-      background:#fff;
-      border-bottom:1px solid var(--line);
-      padding:12px;
-    }
-    .historyBox{
-      border:1px solid var(--line);
-      border-radius:12px;
-      background:#fff;
-      padding:12px;
-    }
-    .historyHead{
-      display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;
-      margin-bottom:10px;
-    }
-    .historyHead .title{
-      font-weight:900;
-      font-size:13px;
-    }
-    .historyTable{
-      width:100%;
-      border-collapse:collapse;
-      min-width: 420px;
-    }
-    .historyTable th, .historyTable td{
-      border-bottom:1px solid var(--line);
-      padding:8px 10px;
-      font-size:12px;
-    }
-    .historyTable th{
-      background:#f9fafb;
-      position:static;
-    }
-    .historyEmpty{
-      color:var(--muted);
-      font-size:12px;
-      padding:10px 0 2px;
-    }
-
-    .view{ display:none; }
-    .view.active{ display:block; }
-
-    .hint-inline{ color:var(--muted); font-size:12px; }
-
-    @media (max-width: 780px){
-      .toolbar .right input{ width: 100% !important; }
-    }
+    body{ margin:0; font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif; color:var(--fg); background:var(--bg); }
+    header{ position:sticky; top:0; z-index:10; background:var(--bg); border-bottom:1px solid var(--line); }
+    .wrap{ max-width:1100px; margin:0 auto; padding:14px 16px; }
+    h1{ margin:0; font-size:18px; }
+    .muted{ color:var(--muted); font-size:13px; }
+    .tabs{ display:flex; gap:10px; margin-top:10px; flex-wrap:wrap; }
+    .tab{ border:1px solid var(--line); background:var(--card); padding:10px 12px; border-radius:12px; cursor:pointer; }
+    .tab.active{ border-color:var(--accent); box-shadow:0 0 0 3px rgba(37,99,235,.12); }
+    main{ padding:16px; }
+    .card{ background:var(--bg); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px; }
+    .row{ display:grid; gap:12px; grid-template-columns: 1fr 1fr; }
+    @media (max-width: 720px){ .row{ grid-template-columns:1fr; } }
+    label{ display:block; font-size:12px; color:var(--muted); margin:8px 0 6px; }
+    input, select, textarea{ width:100%; padding:10px 11px; border:1px solid var(--line); border-radius:12px; font-size:14px; background:#fff; }
+    textarea{ min-height:80px; resize:vertical; }
+    .btn{ border:0; background:var(--accent); color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; font-weight:600; }
+    .btn.secondary{ background:#111827; }
+    .btn.ghost{ background:transparent; color:var(--fg); border:1px solid var(--line); }
+    .btn.danger{ background:var(--danger); }
+    .btn:disabled{ opacity:.6; cursor:not-allowed; }
+    .actions{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:12px; }
+    table{ width:100%; border-collapse:collapse; }
+    th, td{ border-bottom:1px solid var(--line); padding:10px 8px; text-align:left; vertical-align:top; }
+    th{ font-size:12px; color:var(--muted); }
+    .pill{ display:inline-block; padding:4px 10px; border:1px solid var(--line); border-radius:999px; background:var(--card); font-size:12px; }
+    .right{ text-align:right; }
+    .grid3{ display:grid; gap:12px; grid-template-columns: 1fr 1fr 1fr; }
+    @media (max-width: 920px){ .grid3{ grid-template-columns: 1fr; } }
+    .hidden{ display:none !important; }
   </style>
 </head>
 <body>
 <header>
   <div class="wrap">
     <h1>リース品 借入・返却 管理</h1>
-
-    <div class="nav">
-      <div class="left">
-        <button id="toRegister" class="tabbtn active" type="button">＋ 新規登録</button>
-        <button id="toList" class="tabbtn" type="button">一覧を見る</button>
-        <span class="chip" id="navHint">初期画面：新規登録</span>
-      </div>
-      <div class="right">
-        <span class="chip" id="navCount">—</span>
-      </div>
+    <div class="muted">新規登録 / 一覧 / 返却登録（返却操作は返却登録に集約）</div>
+    <div class="tabs">
+      <button class="tab active" id="tabNew" type="button">新規登録</button>
+      <button class="tab" id="tabList" type="button">一覧を見る</button>
+      <button class="tab" id="tabReturn" type="button">返却登録</button>
+      <span class="muted" id="statusMsg"></span>
     </div>
   </div>
 </header>
 
 <main class="wrap">
-  <!-- Register -->
-  <section id="viewRegister" class="view active">
+  <!-- 新規登録 -->
+  <section id="viewNew">
     <div class="card">
-      <h2>新規登録</h2>
+      <h2 style="margin:0 0 6px;">新規登録</h2>
+      <div class="muted">必須：現場 / 品名 / 数量 / 借入日</div>
 
-      <div style="margin-bottom:10px;">
-        <label for="project">現場名／工事名（必須）</label>
-        <input id="project" placeholder="例：東九州道 熊野江地区 災害復旧工事" />
-      </div>
-
-      <div style="margin-bottom:10px;">
-        <label for="name">品名</label>
-        <input id="name" placeholder="例：仮設材（単管）/ コーン / 発電機 など" />
-      </div>
-
-      <div class="row">
+      <div class="grid3" style="margin-top:10px;">
         <div>
-          <label for="qty">数量（借入）</label>
-          <input id="qty" type="number" min="1" step="1" value="1" />
+          <label>現場</label>
+          <input id="project" placeholder="例：熊野江" />
         </div>
         <div>
-          <label for="billing">課金区分</label>
-          <select id="billing">
-            <option value="daily">日割り</option>
-            <option value="monthly">月極</option>
-          </select>
+          <label>品名</label>
+          <input id="itemName" placeholder="例：単管パイプ" />
+        </div>
+        <div>
+          <label>数量（借入）</label>
+          <input id="qty" type="number" min="1" step="1" placeholder="例：20" />
         </div>
       </div>
 
-      <div class="row" style="margin-top:10px;">
+      <div class="grid3" style="margin-top:10px;">
         <div>
-          <label for="unitPrice">単価（円）</label>
-          <input id="unitPrice" type="number" min="0" step="1" placeholder="例：12000" />
-          <div class="inline-check">
-            <input id="priceUnknown" type="checkbox" />
-            <span>※単価不明</span>
-          </div>
+          <label>借入日</label>
+          <input id="startDate" type="date" />
         </div>
         <div>
-          <label for="vendor">リース会社（任意）</label>
+          <label>返却予定日（任意）</label>
+          <input id="dueDate" type="date" />
+        </div>
+        <div>
+          <label>会社（任意）</label>
           <input id="vendor" placeholder="例：〇〇リース" />
         </div>
       </div>
 
-      <div class="row" style="margin-top:10px;">
+      <div class="grid3" style="margin-top:10px;">
         <div>
-          <label for="slipNo">貸出伝票No（任意）</label>
+          <label>伝票No（任意）</label>
           <input id="slipNo" placeholder="例：R-12345" />
         </div>
         <div>
-          <label for="assetNo">管理番号（任意）</label>
-          <input id="assetNo" placeholder="例：機械No/資産タグ/社内管理No" />
-        </div>
-      </div>
-
-      <div class="row" style="margin-top:10px;">
-        <div>
-          <label for="startDate">借入日（必須）</label>
-          <input id="startDate" type="date" />
+          <label>資産番号（任意）</label>
+          <input id="assetNo" placeholder="例：A-001" />
         </div>
         <div>
-          <label for="dueDate">返却予定日（任意・アラート）</label>
-          <input id="dueDate" type="date" />
+          <label>メモ（任意）</label>
+          <input id="memo" placeholder="例：返却時清掃" />
         </div>
       </div>
 
-      <div style="margin-top:10px;">
-        <label for="memo">メモ（任意）</label>
-        <input id="memo" placeholder="例：使用場所/担当者/伝票添付 など" />
+      <!-- OCR -->
+      <div class="card" style="margin-top:14px; box-shadow:none; background:var(--card);">
+        <h3 style="margin:0 0 6px; font-size:15px;">伝票を撮影 → OCRで自動入力（添付保存）</h3>
+        <div class="muted">撮影/選択 → Driveに保存（添付） → OCR → フォームに反映（最終確認してください）</div>
+        <div class="row" style="margin-top:10px;">
+          <div>
+            <label>伝票画像</label>
+            <input id="slipFile" type="file" accept="image/*" capture="environment" />
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <div class="actions">
+              <button id="btnCamera" class="btn ghost" type="button">カメラ起動</button>
+              <button id="btnOcr" class="btn" type="button" disabled>OCR実行（アップロード）</button>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:10px;">
+          <img id="slipPreview" alt="伝票プレビュー" class="hidden" style="max-width:100%; max-height:240px; border:1px solid var(--line); border-radius:12px;" />
+          <div id="slipInfo" class="muted" style="margin-top:8px;"></div>
+          <div id="ocrTextBox" class="muted hidden" style="white-space:pre-wrap; margin-top:10px; padding:10px; background:#fff; border:1px solid var(--line); border-radius:12px;"></div>
+        </div>
       </div>
 
-      <div class="btns">
-        <button id="addBtn" type="button">登録して一覧へ</button>
-        <button class="ghost" id="addStayBtn" type="button">登録して続けて入力</button>
-        <button class="ghost" id="resetBtn" type="button">入力クリア</button>
+      <div class="actions">
+        <button id="btnAdd" class="btn" type="button">登録</button>
+        <button id="btnClear" class="btn ghost" type="button">入力クリア</button>
       </div>
-
-      <p class="note">
-        ※ 金額が分からない場合は「単価不明」にチェックを入れる。<br>
-        ※ 概算費は 日割り＝経過日数×単価×数量 / 月極＝利用月数×単価×数量（単価不明は除外）
-      </p>
     </div>
   </section>
 
-  <!-- List -->
-  <section id="viewList" class="view">
+  <!-- 一覧 -->
+  <section id="viewList" class="hidden">
     <div class="card">
-      <div class="toolbar">
-        <div class="left">
-          <span class="pill" id="countPill">—</span>
+      <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+        <div>
+          <h2 style="margin:0 0 6px;">一覧</h2>
+          <div class="muted">返却は「返却登録」画面で行います（一覧は閲覧＋返却画面へ誘導）</div>
+        </div>
+        <div style="min-width:240px;">
+          <label>検索</label>
+          <input id="listSearch" placeholder="現場/品名/伝票No で検索" />
+        </div>
+      </div>
 
-          <div class="filterInline">
-            <span>表示フィルタ</span>
-            <select id="statusFilter">
-              <option value="rented">借入中</option>
-              <option value="all">全て</option>
-              <option value="returned">返却済みのみ</option>
-              <option value="overdue">期限切れのみ</option>
-            </select>
+      <div style="overflow:auto; margin-top:10px;">
+        <table id="listTable">
+          <thead>
+            <tr>
+              <th>現場</th>
+              <th>品名</th>
+              <th class="right">数量</th>
+              <th class="right">残</th>
+              <th>伝票</th>
+              <th>借入日</th>
+              <th>予定</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="listBody"></tbody>
+        </table>
+      </div>
+      <div class="actions">
+        <button id="btnRefresh" class="btn ghost" type="button">再読込</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 返却登録 -->
+  <section id="viewReturn" class="hidden">
+    <div class="card">
+      <h2 style="margin:0 0 6px;">返却登録</h2>
+      <div class="muted">対象を選択して返却を登録します（一覧の返却操作をこちらへ移動）</div>
+
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <label>対象（検索）</label>
+          <input id="retSearch" placeholder="現場/品名/伝票No で検索" />
+          <select id="retSelect" style="margin-top:8px;"></select>
+          <div id="retSlipLink" class="muted" style="margin-top:8px;"></div>
+
+        <!-- 返却伝票 OCR -->
+        <div class="card" style="margin-top:12px; box-shadow:none; background:var(--card);">
+          <h3 style="margin:0 0 6px; font-size:15px;">返却伝票を撮影 → OCR（添付保存）</h3>
+          <div class="muted">返却時の伝票画像もDriveに保存し、必要に応じてOCRでメモ等に活用できます（最終確認してください）。</div>
+          <div class="row" style="margin-top:10px;">
+            <div>
+              <label>返却伝票画像</label>
+              <input id="retSlipFile" type="file" accept="image/*" capture="environment" />
+            </div>
+            <div>
+              <label>&nbsp;</label>
+              <div class="actions">
+                <button id="btnRetCamera" class="btn ghost" type="button">カメラ起動</button>
+                <button id="btnRetOcr" class="btn" type="button" disabled>OCR実行（アップロード）</button>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:10px;">
+            <img id="retSlipPreview" alt="返却伝票プレビュー" class="hidden" style="max-width:100%; max-height:240px; border:1px solid var(--line); border-radius:12px;" />
+            <div id="retSlipInfo" class="muted" style="margin-top:8px;"></div>
+            <div id="retOcrTextBox" class="muted hidden" style="white-space:pre-wrap; margin-top:10px; padding:10px; background:#fff; border:1px solid var(--line); border-radius:12px;"></div>
           </div>
         </div>
 
-        <div class="right">
-          <select id="projectFilter" style="width: 260px;">
-            <option value="">現場：すべて</option>
-          </select>
-          <input id="q" placeholder="検索（品名/会社/伝票/管理番号/メモ）" style="width:260px;" />
-          <button class="ghost" id="exportViewBtn" type="button">CSV（表示中）</button>
-          <button class="ghost" id="exportAllBtn" type="button">CSV（全件）</button>
-          <button class="danger" id="clearAllBtn" type="button">全データ削除</button>
+        </div>
+        <div>
+          <label>借入中数量（残）</label>
+          <div id="retQtyOut" class="pill">-</div>
+
+          <div class="row" style="margin-top:10px;">
+            <div>
+              <label>返却数量</label>
+              <input id="retQty" type="number" min="1" step="1" value="1" />
+            </div>
+            <div>
+              <label>返却日</label>
+              <input id="retDate" type="date" />
+            </div>
+          </div>
+
+          <label>メモ（任意）</label>
+          <input id="retMemo" placeholder="例：一部返却 / 破損あり 等" />
+
+          <div class="actions">
+            <button id="btnReturn" class="btn" type="button">返却登録</button>
+            <button id="btnUndo" class="btn ghost" type="button">直前返却を取消</button>
+          </div>
         </div>
       </div>
+    </div>
 
-      <div class="kpis" id="kpis"></div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th style="width:160px;">状態</th>
-              <th style="width:220px;">現場名／工事名</th>
-              <th>品名</th>
-              <th style="width:140px;">数量（残/借）</th>
-              <th style="width:120px;">借入日</th>
-              <th style="width:120px;">返却予定日</th>
-              <th style="width:120px;">最終返却日</th>
-              <th style="width:110px;">区分</th>
-              <th style="width:120px;">単価</th>
-              <th style="width:120px;">概算費</th>
-              <th style="width:140px;">会社</th>
-              <th style="width:130px;">伝票No</th>
-              <th style="width:130px;">管理番号</th>
-              <th>メモ</th>
-              <th style="width:430px;">返却操作（行内）</th>
-              <th style="width:240px;">その他</th>
-            </tr>
-          </thead>
-          <tbody id="tbody"></tbody>
+    <div class="card" style="margin-top:14px;">
+      <h3 style="margin:0 0 6px; font-size:15px;">返却履歴（選択中）</h3>
+      <div id="retHistoryEmpty" class="muted">対象を選択してください。</div>
+      <div style="overflow:auto;">
+        <table id="retHistoryTable" class="hidden">
+          <thead><tr><th style="width:140px;">返却日</th><th style="width:100px;" class="right">数量</th><th>メモ</th></tr></thead>
+          <tbody id="retHistoryBody"></tbody>
         </table>
       </div>
-
-      <div class="btns" style="margin-top:14px;">
-        <button class="ghost" id="backToRegister" type="button">← 新規登録へ戻る</button>
-      </div>
-
-      <p class="note">
-        ・返却履歴は「履歴」で展開。<br>
-        ・誤返却は「戻し(Undo)」で最後の返却を取り消せます（返却済みでも借入中へ戻せます）。
-      </p>
     </div>
   </section>
 </main>
 
 <script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbyQs8PYvWD7qyzXjNL1sgaKpjzifSSGU8G3vUtC4Q61-nAXQCGKphf7jGRZGK5p5x-0/exec";
+  // ===== 設定 =====
+  const API_URL = "https://script.google.com/macros/s/AKfycbw_KxLcGaILCGgKLyVaoYPYm_9nNwuZlTCG7mP9gVjWWncURT-9rjvCuc_jTUedhMoA/exec";
 
-  const $ = (id) => document.getElementById(id);
-  const yen = (n) => (n === "" || n === null || n === undefined) ? "" : Number(n).toLocaleString("ja-JP");
-  const z2 = (x)=> String(x).padStart(2,"0");
+  // ===== 状態 =====
+  const state = { items: [] };
+  let slipUploadUrl = "";
+  let slipOcrText = "";
+  let retSlipUploadUrl = "";
+  let retSlipOcrText = "";
 
-  const toYmd = (d) => `${d.getFullYear()}-${z2(d.getMonth()+1)}-${z2(d.getDate())}`;
+  // ===== util =====
+  const $ = (id)=> document.getElementById(id);
+  function setBusy_(msg){
+    $("statusMsg").textContent = msg || "";
+  }
+  function escapeHtml_(s){
+    return String(s||"")
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;")
+      .replace(/'/g,"&#39;");
+  }
+  function toYmdToday_(){
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  }
 
-  const todayYmd = () => toYmd(new Date());
-
-  // ★ここが重要：Date/ISO/文字列を「表示用YYYY-MM-DD」に正規化
-  const fmt = (v) => {
-    if (!v) return "";
-    if (v instanceof Date && !isNaN(v)) return toYmd(v);
-    const s = String(v);
-    const m = s.match(/^(\d{4}-\d{2}-\d{2})/);
-    if (m) return m[1];
-    return s;
-  };
-
-  // ★ここが重要：Date/ISO/"YYYY-MM-DD ..." を全部受ける
-  const parseYmd = (v) => {
-    if (!v) return null;
-    if (v instanceof Date && !isNaN(v)) return new Date(v.getFullYear(), v.getMonth(), v.getDate());
-    const s = String(v);
-    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (!m) return null;
-    const y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]);
-    if (!y || !mo || !d) return null;
-    return new Date(y, mo - 1, d);
-  };
-
-  const uuid = () => "id-" + crypto.getRandomValues(new Uint32Array(1))[0].toString(16) + "-" + Date.now();
-
-  const daysBetween = (a, b) => {
-    const ms = 24*60*60*1000;
-    const da = new Date(a.getFullYear(), a.getMonth(), a.getDate());
-    const db = new Date(b.getFullYear(), b.getMonth(), b.getDate());
-    return Math.floor((db - da) / ms);
-  };
-
-  const monthsUsedInclusive = (startDateStr, endDateStr) => {
-    const s = parseYmd(startDateStr), e = parseYmd(endDateStr);
-    if(!s || !e) return 0;
-    const sm = s.getFullYear()*12 + s.getMonth();
-    const em = e.getFullYear()*12 + e.getMonth();
-    return (em - sm) + 1;
-  };
-
-  const addDays = (dateObj, n) => {
-    const d = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
-    d.setDate(d.getDate() + n);
-    return d;
-  };
-
-  const KEY = "lease_items_cache_v1";
-
-  // --- JSONP client ---
-  function jsonp(action, params = {}) {
-    return new Promise((resolve, reject) => {
+  // JSONP（GAS WebApp）
+  function fetchJsonp_(url, params){
+    return new Promise((resolve, reject)=>{
       const cb = "cb_" + Math.random().toString(16).slice(2);
-      const qs = new URLSearchParams({ action, callback: cb, ...params });
-      const url = `${API_URL}?${qs.toString()}`;
-
-      window[cb] = (data) => { cleanup(); resolve(data); };
-
       const script = document.createElement("script");
-      script.src = url;
-      script.onerror = () => { cleanup(); reject(new Error("JSONP failed")); };
+      const qs = new URLSearchParams({ ...(params||{}), callback: cb });
+      script.src = url + (url.includes("?") ? "&" : "?") + qs.toString();
+      const timer = setTimeout(()=>{
+        cleanup_();
+        reject(new Error("timeout"));
+      }, 25000);
+
+      function cleanup_(){
+        clearTimeout(timer);
+        delete window[cb];
+        script.remove();
+      }
+      window[cb] = (data)=>{ cleanup_(); resolve(data); };
+      script.onerror = ()=>{ cleanup_(); reject(new Error("network/script error")); };
       document.body.appendChild(script);
-
-      function cleanup(){
-        try { delete window[cb]; } catch {}
-        try { script.remove(); } catch {}
-      }
     });
   }
 
-  // --- local cache ---
-  const loadCache = () => {
-    try { return JSON.parse(localStorage.getItem(KEY) || "[]"); }
-    catch { return []; }
-  };
-  const saveCache = (items) => {
-    try { localStorage.setItem(KEY, JSON.stringify(items)); } catch {}
-  };
-
-  // --- mapping: sheet -> UI（★日付は必ずfmtで正規化） ---
-  function fromSheet_(r){
-    return {
-      id: String(r.id ?? ""),
-      project: r.project || "",
-      name: r.name || "",
-      qtyTotal: Number(r.qty_total || 0),
-      qtyOut: Number(r.qty_out || 0),
-      billing: r.billing || "daily",
-      priceUnknown: (r.price_unknown === true) || (String(r.price_unknown).toLowerCase() === "true"),
-      unitPrice: (r.unit_price === "" || r.unit_price === null || r.unit_price === undefined) ? "" : Number(r.unit_price),
-      vendor: r.vendor || "",
-      slipNo: r.slip_no || "",
-      assetNo: r.asset_no || "",
-      memo: r.memo || "",
-      startDate: fmt(r.start_date),
-      dueDate: fmt(r.due_date),
-      status: r.status || "rented",
-      returns: Array.isArray(r.returns)
-        ? r.returns.map(x => ({ date: fmt(x.date), qty: Number(x.qty || 0) }))
-        : []
-    };
+  // ===== 画面切替 =====
+  function showView_(name){
+    const views = [
+      ["new","viewNew","tabNew"],
+      ["list","viewList","tabList"],
+      ["return","viewReturn","tabReturn"]
+    ];
+    for(const [k, vid, tid] of views){
+      $(vid).classList.toggle("hidden", k !== name);
+      $(tid).classList.toggle("active", k === name);
+    }
+    window.scrollTo({top:0, behavior:"smooth"});
   }
 
-  // --- mapping: UI -> addItem params (GAS) ---
-  function toAddParams_(){
-    const priceUnknown = $("priceUnknown").checked;
-    const unitPriceStr = $("unitPrice").value.trim();
-    return {
-      project: $("project").value.trim(),
-      name: $("name").value.trim(),
-      qty_total: String($("qty").value),
-      billing: $("billing").value,
-      price_unknown: priceUnknown ? "true" : "false",
-      unit_price: (priceUnknown || unitPriceStr === "") ? "" : unitPriceStr,
-      vendor: $("vendor").value.trim(),
-      slip_no: $("slipNo").value.trim(),
-      asset_no: $("assetNo").value.trim(),
-      start_date: $("startDate").value,
-      due_date: $("dueDate").value,
-      memo: $("memo").value.trim()
-    };
+  // ===== OCR =====
+  function fileToDataUrl_(file){
+    return new Promise((resolve, reject)=>{
+      const fr = new FileReader();
+      fr.onload = ()=> resolve(fr.result);
+      fr.onerror = ()=> reject(fr.error || new Error("file read error"));
+      fr.readAsDataURL(file);
+    });
+  }
+  function normalizeText_(t){
+    return (t||"")
+      .replace(/[：]/g, ":")
+      .replace(/[０-９]/g, (d)=> String.fromCharCode(d.charCodeAt(0) - 0xFEE0))
+      .replace(/[Ａ-Ｚａ-ｚ]/g, (c)=> String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+      .replace(/\u00A0/g, " ")
+      .replace(/[ \t]+/g, " ")
+      .replace(/\r/g, "");
+  }
+  function pickDate_(t){
+    const s = normalizeText_(t);
+    const m1 = s.match(/(20\\d{2})[\\/\\-\\.](\\d{1,2})[\\/\\-\\.](\\d{1,2})/);
+    if(m1){
+      const y = m1[1];
+      const mo = String(m1[2]).padStart(2,"0");
+      const d = String(m1[3]).padStart(2,"0");
+      return `${y}-${mo}-${d}`;
+    }
+    return "";
+  }
+  function pickSlipNo_(t){
+    const s = normalizeText_(t);
+    const m = s.match(/(?:伝票|伝票No|伝票NO|No|NO|番号)\\s*[:#]?\\s*([A-Za-z0-9\\-\\/]{3,})/i);
+    return m ? m[1] : "";
+  }
+  function pickQty_(t){
+    const s = normalizeText_(t);
+    const m = s.match(/(?:数量|数)\\s*[: ]\\s*([0-9]{1,5})/);
+    if(m) return Number(m[1]);
+    const m2 = s.match(/([0-9]{1,5})\\s*(?:本|枚|個|台|式|袋|箱)/);
+    if(m2) return Number(m2[1]);
+    return null;
+  }
+  function pickVendor_(t){
+    const s = normalizeText_(t);
+    const lines = s.split("\\n").map(x=>x.trim()).filter(Boolean);
+    for(const line of lines.slice(0,10)){
+      if(/(株式会社|\\(株\\)|（株）|有限会社|\\(有\\)|リース|レンタル|商店|建設|工業|センター|支店)/.test(line) && line.length <= 30){
+        return line;
+      }
+    }
+    return "";
+  }
+  function pickItemName_(t){
+    const s = normalizeText_(t);
+    const m = s.match(/(?:品名|商品|品目)\\s*[: ]\\s*([^\\n]{2,40})/);
+    return m ? m[1].trim() : "";
+  }
+  function applyOcrToForm_(ocrText){
+    const t = normalizeText_(ocrText);
+    const vendor = pickVendor_(t);
+    if(vendor && !$("vendor").value) $("vendor").value = vendor;
+    const slipNo = pickSlipNo_(t);
+    if(slipNo && !$("slipNo").value) $("slipNo").value = slipNo;
+    const name = pickItemName_(t);
+    if(name && !$("itemName").value) $("itemName").value = name;
+    const qty = pickQty_(t);
+    if(qty && !$("qty").value) $("qty").value = String(qty);
+    const d = pickDate_(t);
+    if(d && !$("startDate").value) $("startDate").value = d;
   }
 
-  async function refreshFromServer_(){
+  async function runOcrUpload_(){
+    const file = $("slipFile").files && $("slipFile").files[0];
+    if(!file){ alert("伝票画像を選択してください"); return; }
+    $("btnOcr").disabled = true;
+    setBusy_("OCRアップロード中…");
     try{
-      const res = await jsonp("list");
-      if(!res || !res.ok) throw new Error(res && res.error ? res.error : "list failed");
-      items = (res.items || []).map(fromSheet_);
-      saveCache(items);
-      updateNavCount();
-      render();
+      const dataUrl = await fileToDataUrl_(file);
+      const base64 = (dataUrl.split(",")[1] || "");
+      const res = await fetchJsonp_(`${API_URL}?action=uploadSlip`, {
+        filename: file.name || `slip_${Date.now()}.jpg`,
+        mime: file.type || "image/jpeg",
+        data: base64
+      });
+      if(!res.ok) throw new Error(res.error || "uploadSlip failed");
+
+      slipUploadUrl = res.file_url || "";
+      slipOcrText = res.ocr_text || "";
+
+      $("slipInfo").innerHTML = slipUploadUrl ? `保存先: <a href="${escapeHtml_(slipUploadUrl)}" target="_blank" rel="noopener">Driveで開く</a>` : "";
+      $("ocrTextBox").classList.remove("hidden");
+      $("ocrTextBox").textContent = slipOcrText
+        ? `OCR結果（抜粋）:\\n${slipOcrText.slice(0,1200)}${slipOcrText.length>1200?"\\n…(省略)":""}`
+        : "OCR結果: （読み取れませんでした）";
+
+      if(slipOcrText) applyOcrToForm_(slipOcrText);
+      setBusy_("");
     }catch(err){
-      console.warn("refresh failed:", err);
-      // キャッシュ表示維持
+      console.error(err);
+      alert(`OCRでエラー: ${err.message || err}`);
+      setBusy_("");
+    }finally{
+      $("btnOcr").disabled = false;
     }
   }
 
-  let items = loadCache();
-  const openHistory = new Set();
+  async function runRetOcrUpload_(){
+    const file = $("retSlipFile").files && $("retSlipFile").files[0];
+    if(!file){ alert("返却伝票画像を選択してください"); return; }
+    $("btnRetOcr").disabled = true;
+    setBusy_("返却伝票OCRアップロード中…");
+    try{
+      const dataUrl = await fileToDataUrl_(file);
+      const base64 = (dataUrl.split(",")[1] || "");
+      const res = await fetchJsonp_(`${API_URL}?action=uploadSlip`, {
+        filename: file.name || `return_slip_${Date.now()}.jpg`,
+        mime: file.type || "image/jpeg",
+        data: base64
+      });
+      if(!res.ok) throw new Error(res.error || "uploadSlip failed");
 
-  function setActiveView(view){
-    const reg = $("viewRegister");
-    const list = $("viewList");
-    const bReg = $("toRegister");
-    const bList = $("toList");
+      retSlipUploadUrl = res.file_url || "";
+      retSlipOcrText = res.ocr_text || "";
 
-    if(view === "list"){
-      reg.classList.remove("active");
-      list.classList.add("active");
-      bReg.classList.remove("active");
-      bList.classList.add("active");
-      $("navHint").textContent = "一覧画面";
-      render();
-    }else{
-      list.classList.remove("active");
-      reg.classList.add("active");
-      bList.classList.remove("active");
-      bReg.classList.add("active");
-      $("navHint").textContent = "新規登録画面";
-    }
-    location.hash = view === "list" ? "#list" : "#register";
-  }
+      $("retSlipInfo").innerHTML = retSlipUploadUrl ? `保存先: <a href="${escapeHtml_(retSlipUploadUrl)}" target="_blank" rel="noopener">Driveで開く</a>` : "";
+      $("retOcrTextBox").classList.remove("hidden");
+      $("retOcrTextBox").textContent = retSlipOcrText
+        ? `OCR結果（抜粋）:\n${retSlipOcrText.slice(0,1200)}${retSlipOcrText.length>1200?"\n…(省略)":""}`
+        : "OCR結果: （読み取れませんでした）";
 
-  window.addEventListener("hashchange", () => {
-    const h = (location.hash || "").replace("#","");
-    if(h === "list") setActiveView("list");
-    else setActiveView("register");
-  });
-
-  $("toRegister").onclick = () => setActiveView("register");
-  $("toList").onclick = () => setActiveView("list");
-  $("backToRegister").onclick = () => setActiveView("register");
-
-  if((location.hash || "") === "#list") setActiveView("list");
-  else setActiveView("register");
-
-  function lastReturnDate(it){
-    if(!Array.isArray(it.returns) || it.returns.length === 0) return "";
-    const sorted = [...it.returns].sort((a,b)=>(a.date||"").localeCompare(b.date||""));
-    return sorted[sorted.length-1].date || "";
-  }
-
-  function statusBadge(it){
-    if(it.status === "returned") return {cls:"returned", text:"返却済み"};
-    const t = parseYmd(todayYmd());
-    const due = parseYmd(it.dueDate);
-    if(due){
-      const d = daysBetween(t, due);
-      if(d < 0) return {cls:"overdue", text:"期限切れ"};
-      if(d <= 3) return {cls:"due", text:"返却期限迫る"};
-    }
-    return {cls:"rented", text:"借入中"};
-  }
-
-  function estimateCost(it){
-    if(it.priceUnknown) return null;
-    if(it.unitPrice === "" || it.unitPrice === null || it.unitPrice === undefined) return null;
-    const unit = Number(it.unitPrice);
-    if(!Number.isFinite(unit)) return null;
-
-    const start = parseYmd(it.startDate);
-    if(!start) return null;
-
-    const events = (Array.isArray(it.returns) ? it.returns : [])
-      .filter(r => r && r.date && Number(r.qty) > 0)
-      .sort((a,b)=>(a.date||"").localeCompare(b.date||""));
-
-    const qtyTotal = Number(it.qtyTotal ?? 0);
-    if(!Number.isFinite(qtyTotal) || qtyTotal <= 0) return null;
-
-    let sum = 0;
-    let segStart = start;
-    let currentOut = qtyTotal;
-
-    for(const ev of events){
-      const evDate = parseYmd(ev.date);
-      if(!evDate) continue;
-
-      if(evDate >= segStart){
-        if(it.billing === "monthly"){
-          const m = monthsUsedInclusive(toYmd(segStart), ev.date);
-          sum += unit * currentOut * m;
-        }else{
-          const d = Math.max(0, daysBetween(segStart, evDate)) + 1;
-          sum += unit * currentOut * d;
-        }
+      if(!$("retMemo").value && retSlipOcrText){
+        const slip = pickSlipNo_(retSlipOcrText);
+        if(slip) $("retMemo").value = `返却伝票:${slip}`;
       }
-
-      const rqty = Math.max(0, Math.min(currentOut, Number(ev.qty)));
-      currentOut = Math.max(0, currentOut - rqty);
-      segStart = addDays(evDate, 1);
-      if(currentOut === 0) break;
+      setBusy_("");
+    }catch(err){
+      console.error(err);
+      alert(`返却伝票OCRでエラー: ${err.message || err}`);
+      setBusy_("");
+    }finally{
+      $("btnRetOcr").disabled = false;
     }
-
-    if(currentOut > 0){
-      const endStr = (it.status === "returned") ? lastReturnDate(it) : todayYmd();
-      const end = parseYmd(endStr);
-      if(end && end >= segStart){
-        if(it.billing === "monthly"){
-          const m = monthsUsedInclusive(toYmd(segStart), endStr);
-          sum += unit * currentOut * m;
-        }else{
-          const d = Math.max(0, daysBetween(segStart, end)) + 1;
-          sum += unit * currentOut * d;
-        }
-      }
-    }
-
-    return Math.round(sum);
   }
 
-  function rebuildProjectFilter(){
-    const sel = $("projectFilter");
-    const current = sel.value;
-    const projects = Array.from(new Set(items.map(x => (x.project||"").trim()).filter(Boolean)))
-      .sort((a,b)=>a.localeCompare(b,"ja"));
 
-    sel.innerHTML = "";
-    const optAll = document.createElement("option");
-    optAll.value = "";
-    optAll.textContent = "現場：すべて";
-    sel.appendChild(optAll);
-
-    for(const p of projects){
-      const o = document.createElement("option");
-      o.value = p;
-      o.textContent = `現場：${p}`;
-      sel.appendChild(o);
-    }
-
-    if(projects.includes(current)) sel.value = current;
-    else sel.value = "";
+  // ===== データ =====
+  async function refresh_(){
+    setBusy_("読込中…");
+    const res = await fetchJsonp_(`${API_URL}?action=list`, {});
+    if(!res.ok) throw new Error(res.error || "list failed");
+    state.items = res.items || [];
+    setBusy_("");
+    renderList_();
+    buildReturnOptions_();
   }
 
-  function filteredItems(){
-    const statusFilter = $("statusFilter").value;
-    const q = $("q").value.trim().toLowerCase();
-    const pf = $("projectFilter").value;
-
-    return items.filter(it => {
-      if(pf && (it.project||"") !== pf) return false;
-
-      if(statusFilter === "rented"){
-        if(it.status !== "rented") return false;
-      }else if(statusFilter === "returned"){
-        if(it.status !== "returned") return false;
-      }else if(statusFilter === "overdue"){
-        if(it.status !== "rented") return false;
-        const due = parseYmd(it.dueDate);
-        if(!due) return false;
-        const t = parseYmd(todayYmd());
-        if(daysBetween(t, due) >= 0) return false;
-      }else{
-        // all
-      }
-
-      if(!q) return true;
-      const hay = `${it.project||""} ${it.name||""} ${it.vendor||""} ${it.memo||""} ${it.slipNo||""} ${it.assetNo||""}`.toLowerCase();
-      return hay.includes(q);
-    });
-  }
-
-  function updateNavCount(){
-    const rented = items.filter(x=>x.status==="rented").length;
-    const returned = items.filter(x=>x.status==="returned").length;
-    $("navCount").textContent = `借入中 ${rented} / 返却済 ${returned}`;
-  }
-
-  function updateKPIs(list){
-    const rentedAll = items.filter(x=>x.status==="rented").length;
-    const returnedAll = items.filter(x=>x.status==="returned").length;
-
-    const listRented = list.filter(x=>x.status==="rented");
-    const listReturned = list.filter(x=>x.status==="returned");
-
-    const t = parseYmd(todayYmd());
-    let overdue = 0, dueSoon = 0;
-    for(const it of items){
-      if(it.status !== "rented") continue;
-      const due = parseYmd(it.dueDate);
-      if(!due) continue;
-      const d = daysBetween(t, due);
-      if(d < 0) overdue++;
-      else if(d <= 3) dueSoon++;
-    }
-
-    const sum = (arr) => arr.reduce((acc,it)=>{
-      const c = estimateCost(it);
-      return acc + (c ? c : 0);
-    },0);
-
-    const sumView = sum(list);
-    const sumRentedView = sum(listRented);
-
-    $("kpis").innerHTML = `
-      <div class="kpi">全体：<strong>${rentedAll}</strong> 借入中 ／ <strong>${returnedAll}</strong> 返却済</div>
-      <div class="kpi">アラート：<strong style="color:var(--danger)">${overdue}</strong> 期限切れ ／ <strong style="color:var(--warn)">${dueSoon}</strong> 迫る</div>
-      <div class="kpi">表示中：<strong>${listRented.length}</strong> 借入中 ／ <strong>${listReturned.length}</strong> 返却済</div>
-      <div class="kpi">概算（表示中）：<strong class="mono">${yen(sumView)}</strong> 円</div>
-      <div class="kpi">概算（表示中・借入中）：<strong class="mono">${yen(sumRentedView)}</strong> 円</div>
-    `;
-  }
-
-  function validateReturnInput(max, qtyStr, dateStr){
-    const qty = Number(qtyStr);
-    if(!Number.isFinite(qty) || qty <= 0) return {ok:false, msg:"返却数量は1以上で入力してください"};
-    if(qty > max) return {ok:false, msg:`返却数量が残数量(${max})を超えています`};
-    const d = parseYmd(dateStr);
-    if(!d) return {ok:false, msg:"返却日が不正です（YYYY-MM-DD）"};
-    return {ok:true, qty, date: fmt(dateStr)};
-  }
-
-  function applyReturn(it, qty, dateStr){
-    if(!Array.isArray(it.returns)) it.returns = [];
-    it.returns.push({ date: fmt(dateStr), qty });
-    it.qtyOut = Math.max(0, Number(it.qtyOut) - qty);
-    it.status = (it.qtyOut === 0) ? "returned" : "rented";
-
-    updateNavCount();
-    render();
-
-    (async () => {
-      try{
-        const res = await jsonp("returnItem", { id: String(it.id), qty: String(qty), return_date: fmt(dateStr) });
-        if(!res || !res.ok) alert(res && res.error ? res.error : "返却に失敗しました");
-        await refreshFromServer_();
-      }catch(err){
-        console.error(err);
-        alert("通信エラー：返却に失敗しました");
-        await refreshFromServer_();
-      }
-    })();
-  }
-
-  function undoLastReturn(it){
-    if(!Array.isArray(it.returns) || it.returns.length === 0){
-      alert("戻せる返却履歴がありません。");
+  async function addItem_(){
+    const project = $("project").value.trim();
+    const name = $("itemName").value.trim();
+    const qty_total = Number($("qty").value);
+    const start_date = $("startDate").value;
+    if(!project || !name || !qty_total || !start_date){
+      alert("必須（現場/品名/数量/借入日）を入力してください");
       return;
     }
-    if(!confirm("最後の返却を取り消します。よろしいですか？")) return;
 
-    const last = it.returns.pop();
-    const qty = Number(last.qty) || 0;
-
-    const total = Number(it.qtyTotal) || 0;
-    it.qtyOut = Math.min(total, Math.max(0, Number(it.qtyOut) + qty));
-    it.status = (it.qtyOut === 0) ? "returned" : "rented";
-
-    updateNavCount();
-    render();
-
-    (async () => {
-      try{
-        const res = await jsonp("undoReturn", { id: String(it.id) });
-        if(!res || !res.ok) alert(res && res.error ? res.error : "返却取消に失敗しました");
-        await refreshFromServer_();
-      }catch(err){
-        console.error(err);
-        alert("通信エラー：返却取消に失敗しました");
-        await refreshFromServer_();
-      }
-    })();
-  }
-
-  function forceBackToRented(it){
-    if(!confirm("返却済みを借入中に戻します（残数量を借入数量に戻し、返却履歴は残します）。よろしいですか？")) return;
-    const total = Number(it.qtyTotal) || 0;
-    it.qtyOut = total;
-    it.status = "rented";
-
-    updateNavCount();
-    render();
-
-    (async () => {
-      try{
-        const res = await jsonp("backToRented", { id: String(it.id) });
-        if(!res || !res.ok) alert(res && res.error ? res.error : "借入へ戻す処理に失敗しました");
-        await refreshFromServer_();
-      }catch(err){
-        console.error(err);
-        alert("通信エラー：借入へ戻す処理に失敗しました");
-        await refreshFromServer_();
-      }
-    })();
-  }
-
-  function toggleHistory(id){
-    if(openHistory.has(id)) openHistory.delete(id);
-    else openHistory.add(id);
-    render();
-  }
-
-  function render(){
-    updateNavCount();
-    rebuildProjectFilter();
-
-    const list = filteredItems();
-
-    const rentedCount = items.filter(x=>x.status==="rented").length;
-    const returnedCount = items.filter(x=>x.status==="returned").length;
-
-    const filterLabel =
-      $("statusFilter").value === "rented" ? "借入中" :
-      $("statusFilter").value === "returned" ? "返却済みのみ" :
-      $("statusFilter").value === "overdue" ? "期限切れのみ" : "全て";
-
-    $("countPill").textContent = `借入中：${rentedCount}件 ／ 返却済：${returnedCount}件（表示：${list.length}件・${filterLabel}）`;
-
-    updateKPIs(list);
-
-    const sorted = [...list].sort((a,b)=>{
-      if(a.status !== b.status) return a.status === "rented" ? -1 : 1;
-      const ad = a.dueDate || "9999-12-31";
-      const bd = b.dueDate || "9999-12-31";
-      if(ad !== bd) return ad.localeCompare(bd);
-      return (b.startDate||"").localeCompare(a.startDate||"");
-    });
-
-    const tbody = $("tbody");
-    tbody.innerHTML = "";
-
-    for(const it of sorted){
-      const tr = document.createElement("tr");
-
-      const badge = statusBadge(it);
-      const statusTd = document.createElement("td");
-      const status = document.createElement("span");
-      status.className = "status " + badge.cls;
-      status.innerHTML = `<span class="dot"></span>${badge.text}`;
-      statusTd.appendChild(status);
-
-      const projectTd = document.createElement("td"); projectTd.textContent = it.project || "";
-      const nameTd = document.createElement("td"); nameTd.className = "item-name"; nameTd.textContent = it.name || "";
-
-      const qtyTd = document.createElement("td");
-      qtyTd.className = "mono";
-      const total = Number(it.qtyTotal) || 0;
-      const out = Number(it.qtyOut) || 0;
-      qtyTd.textContent = `${out} / ${total}`;
-
-      const startTd = document.createElement("td"); startTd.className = "mono"; startTd.textContent = fmt(it.startDate);
-      const dueTd = document.createElement("td"); dueTd.className = "mono"; dueTd.textContent = fmt(it.dueDate);
-      const lastTd = document.createElement("td"); lastTd.className = "mono"; lastTd.textContent = fmt(lastReturnDate(it));
-      const billingTd = document.createElement("td"); billingTd.textContent = it.billing === "monthly" ? "月極" : "日割り";
-
-      const priceTd = document.createElement("td");
-      priceTd.className = "mono";
-      if(it.priceUnknown) priceTd.textContent = "不明";
-      else priceTd.textContent = (it.unitPrice === "" ? "" : `${yen(it.unitPrice)} 円`);
-
-      const estTd = document.createElement("td");
-      estTd.className = "mono";
-      const est = estimateCost(it);
-      estTd.textContent = (est === null) ? "—" : `${yen(est)} 円`;
-
-      const vendorTd = document.createElement("td"); vendorTd.textContent = it.vendor || "";
-      const slipTd = document.createElement("td"); slipTd.className = "mono"; slipTd.textContent = it.slipNo || "";
-      const assetTd = document.createElement("td"); assetTd.className = "mono"; assetTd.textContent = it.assetNo || "";
-      const memoTd = document.createElement("td"); memoTd.textContent = it.memo || "";
-
-      const retTd = document.createElement("td");
-      const wrap = document.createElement("div");
-      wrap.className = "miniWrap";
-
-      const qtyInput = document.createElement("input");
-      qtyInput.type = "number";
-      qtyInput.min = "1";
-      qtyInput.step = "1";
-      qtyInput.value = out > 0 ? "1" : "0";
-      qtyInput.className = "mini qty";
-      qtyInput.placeholder = "返却数";
-
-      const dateInput = document.createElement("input");
-      dateInput.type = "date";
-      dateInput.value = todayYmd();
-      dateInput.className = "mini date";
-
-      const btnPartial = document.createElement("button");
-      btnPartial.className = "ghost";
-      btnPartial.textContent = "一部返却";
-      btnPartial.disabled = (it.status === "returned" || out === 0);
-
-      const btnAll = document.createElement("button");
-      btnAll.className = "secondary";
-      btnAll.textContent = "全部返却";
-      btnAll.disabled = (it.status === "returned" || out === 0);
-
-      const btnUndo = document.createElement("button");
-      btnUndo.className = "warn";
-      btnUndo.textContent = "戻し(Undo)";
-      btnUndo.disabled = !(Array.isArray(it.returns) && it.returns.length > 0);
-
-      const hint = document.createElement("span");
-      hint.className = "hint-inline";
-      hint.textContent = `残${out}に対して返却`;
-
-      btnPartial.onclick = () => {
-        const v = validateReturnInput(out, qtyInput.value, dateInput.value);
-        if(!v.ok){ alert(v.msg); return; }
-        applyReturn(it, v.qty, v.date);
-      };
-
-      btnAll.onclick = () => {
-        const v = validateReturnInput(out, String(out), dateInput.value);
-        if(!v.ok){ alert(v.msg); return; }
-        applyReturn(it, out, v.date);
-      };
-
-      btnUndo.onclick = () => undoLastReturn(it);
-
-      wrap.appendChild(qtyInput);
-      wrap.appendChild(dateInput);
-      wrap.appendChild(btnPartial);
-      wrap.appendChild(btnAll);
-      wrap.appendChild(btnUndo);
-      wrap.appendChild(hint);
-
-      retTd.appendChild(wrap);
-
-      const actTd = document.createElement("td");
-      const acts = document.createElement("div");
-      acts.className = "actions";
-
-      const setDue = document.createElement("button");
-      setDue.className = "ghost";
-      setDue.textContent = "予定日入力";
-      setDue.onclick = () => {
-        const d = prompt("返却予定日（YYYY-MM-DD）を入力", it.dueDate || "");
-        if(d === null) return;
-        const dd = (d || "").trim();
-
-        (async () => {
-          try{
-            const res = await jsonp("updateItem", { id: String(it.id), due_date: dd });
-            if(!res || !res.ok){ alert(res && res.error ? res.error : "更新に失敗しました"); return; }
-            await refreshFromServer_();
-          }catch(err){
-            console.error(err);
-            alert("通信エラー：更新に失敗しました");
-          }
-        })();
-      };
-
-      const historyBtn = document.createElement("button");
-      historyBtn.className = "ghost";
-      historyBtn.textContent = openHistory.has(it.id) ? "履歴を閉じる" : "履歴";
-      historyBtn.onclick = () => toggleHistory(it.id);
-
-      const backBtn = document.createElement("button");
-      backBtn.className = "ghost";
-      backBtn.textContent = "借入へ戻す";
-      backBtn.disabled = (it.status !== "returned");
-      backBtn.onclick = () => forceBackToRented(it);
-
-      const del = document.createElement("button");
-      del.className = "danger";
-      del.textContent = "削除";
-      del.onclick = () => {
-        if(!confirm("この行を削除します。よろしいですか？")) return;
-
-        (async () => {
-          try{
-            const res = await jsonp("deleteItem", { id: String(it.id) });
-            if(!res || !res.ok){ alert(res && res.error ? res.error : "削除に失敗しました"); return; }
-            openHistory.delete(it.id);
-            await refreshFromServer_();
-          }catch(err){
-            console.error(err);
-            alert("通信エラー：削除に失敗しました");
-          }
-        })();
-      };
-
-      acts.appendChild(setDue);
-      acts.appendChild(historyBtn);
-      acts.appendChild(backBtn);
-      acts.appendChild(del);
-      actTd.appendChild(acts);
-
-      [
-        statusTd,projectTd,nameTd,qtyTd,startTd,dueTd,lastTd,billingTd,priceTd,estTd,
-        vendorTd,slipTd,assetTd,memoTd,retTd,actTd
-      ].forEach(td=>tr.appendChild(td));
-
-      tbody.appendChild(tr);
-
-      if(openHistory.has(it.id)){
-        const htr = document.createElement("tr");
-        htr.className = "historyRow";
-        const htd = document.createElement("td");
-        htd.colSpan = 16;
-
-        const box = document.createElement("div");
-        box.className = "historyBox";
-
-        const head = document.createElement("div");
-        head.className = "historyHead";
-
-        const ttl = document.createElement("div");
-        ttl.className = "title";
-        const returnedQty = Math.max(0, (Number(it.qtyTotal)||0) - (Number(it.qtyOut)||0));
-        ttl.textContent = `返却履歴（返却済 ${returnedQty} ／ 残 ${Number(it.qtyOut)||0} ／ 借入 ${Number(it.qtyTotal)||0}）`;
-
-        const right = document.createElement("div");
-        right.className = "small mono";
-        right.textContent = `最終返却日：${fmt(lastReturnDate(it)) || "—"}`;
-
-        head.appendChild(ttl);
-        head.appendChild(right);
-        box.appendChild(head);
-
-        const arr = Array.isArray(it.returns) ? [...it.returns] : [];
-        arr.sort((a,b)=>(a.date||"").localeCompare(b.date||""));
-
-        if(arr.length === 0){
-          const empty = document.createElement("div");
-          empty.className = "historyEmpty";
-          empty.textContent = "返却履歴はまだありません。";
-          box.appendChild(empty);
-        }else{
-          const t = document.createElement("table");
-          t.className = "historyTable";
-          t.innerHTML = `
-            <thead>
-              <tr><th style="width:160px;">返却日</th><th style="width:120px;">数量</th><th>メモ</th></tr>
-            </thead>
-            <tbody></tbody>
-          `;
-          const tb = t.querySelector("tbody");
-          for(const r of arr){
-            const trr = document.createElement("tr");
-            const td1 = document.createElement("td"); td1.className="mono"; td1.textContent = fmt(r.date) || "";
-            const td2 = document.createElement("td"); td2.className="mono"; td2.textContent = r.qty ?? "";
-            const td3 = document.createElement("td"); td3.className="small"; td3.textContent = r.memo || "";
-            trr.appendChild(td1); trr.appendChild(td2); trr.appendChild(td3);
-            tb.appendChild(trr);
-          }
-          box.appendChild(t);
-        }
-
-        htd.appendChild(box);
-        htr.appendChild(htd);
-        tbody.appendChild(htr);
-      }
+    $("btnAdd").disabled = true;
+    setBusy_("登録中…");
+    try{
+      const res = await fetchJsonp_(`${API_URL}?action=addItem`, {
+        project, name, qty_total,
+        vendor: $("vendor").value.trim(),
+        slip_no: $("slipNo").value.trim(),
+        slip_url: slipUploadUrl,
+        slip_ocr: slipOcrText,
+        asset_no: $("assetNo").value.trim(),
+        memo: $("memo").value.trim(),
+        start_date,
+        due_date: $("dueDate").value
+      });
+      if(!res.ok) throw new Error(res.error || "addItem failed");
+      clearForm_();
+      await refresh_();
+      showView_("list");
+      alert("登録しました");
+    }catch(err){
+      console.error(err);
+      alert(`登録でエラー: ${err.message || err}`);
+    }finally{
+      $("btnAdd").disabled = false;
+      setBusy_("");
     }
   }
 
-  function clearForm(keepProject=false){
-    const p = $("project").value;
-    $("project").value = keepProject ? p : "";
-    $("name").value = "";
-    $("qty").value = 1;
-    $("billing").value = "daily";
-    $("unitPrice").value = "";
-    $("priceUnknown").checked = false;
-    $("unitPrice").disabled = false;
+  async function returnItem_(){
+    const id = $("retSelect").value;
+    const it = state.items.find(x=>x.id === id);
+    if(!it){ alert("対象を選択してください"); return; }
+    const qty = Number($("retQty").value);
+    const return_date = $("retDate").value;
+    if(!Number.isFinite(qty) || qty <= 0){ alert("返却数量が不正です"); return; }
+    if(qty > Number(it.qty_out||0)){ alert(`返却数量が残数(${it.qty_out})を超えています`); return; }
+    if(!return_date){ alert("返却日を入力してください"); return; }
 
+    $("btnReturn").disabled = true;
+    setBusy_("返却登録中…");
+    try{
+      const res = await fetchJsonp_(`${API_URL}?action=returnItem`, {
+        id, qty, return_date,
+        memo: $("retMemo").value.trim(),
+        slip_url: retSlipUploadUrl,
+        slip_ocr: retSlipOcrText
+      });
+      if(!res.ok) throw new Error(res.error || "returnItem failed");
+      $("retMemo").value = "";
+      await refresh_();
+      // 選択維持
+      $("retSelect").value = id;
+      onReturnSelectChange_();
+      
+      // 返却伝票OCR状態リセット
+      retSlipUploadUrl = "";
+      retSlipOcrText = "";
+      $("retSlipFile").value = "";
+      $("retSlipPreview").classList.add("hidden");
+      $("retSlipPreview").src = "";
+      $("retSlipInfo").textContent = "";
+      $("retOcrTextBox").classList.add("hidden");
+      $("retOcrTextBox").textContent = "";
+      $("btnRetOcr").disabled = true;
+
+      alert("返却登録しました");
+
+    }catch(err){
+      console.error(err);
+      alert(`返却登録でエラー: ${err.message || err}`);
+    }finally{
+      $("btnReturn").disabled = false;
+      setBusy_("");
+    }
+  }
+
+  async function undoReturn_(){
+    const id = $("retSelect").value;
+    if(!id){ alert("対象を選択してください"); return; }
+    $("btnUndo").disabled = true;
+    setBusy_("取消中…");
+    try{
+      const res = await fetchJsonp_(`${API_URL}?action=undoReturn`, { id });
+      if(!res.ok) throw new Error(res.error || "undoReturn failed");
+      await refresh_();
+      $("retSelect").value = id;
+      onReturnSelectChange_();
+      alert("直前の返却を取消しました");
+    }catch(err){
+      console.error(err);
+      alert(`取消でエラー: ${err.message || err}`);
+    }finally{
+      $("btnUndo").disabled = false;
+      setBusy_("");
+    }
+  }
+
+  // ===== 描画 =====
+  function renderList_(){
+    const body = $("listBody");
+    body.innerHTML = "";
+    const q = $("listSearch").value.trim().toLowerCase();
+    const items = state.items.slice().sort((a,b)=> String(b.startDate||"").localeCompare(String(a.startDate||"")));
+    for(const it of items){
+      const hay = `${it.project||""} ${it.name||""} ${it.slipNo||""}`.toLowerCase();
+      if(q && !hay.includes(q)) continue;
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${escapeHtml_(it.project||"")}</td>
+        <td>${escapeHtml_(it.name||"")}</td>
+        <td class="right">${Number(it.qty_total||0)}</td>
+        <td class="right">${Number(it.qty_out||0)}</td>
+        <td>${it.slipUrl ? `<a href="${escapeHtml_(it.slipUrl)}" target="_blank" rel="noopener">📎</a>` : ""}${it.slipNo ? ` ${escapeHtml_(it.slipNo)}`:""}</td>
+        <td>${escapeHtml_(it.startDate||"")}</td>
+        <td>${escapeHtml_(it.dueDate||"")}</td>
+        <td></td>
+      `;
+      const td = tr.querySelector("td:last-child");
+      const btn = document.createElement("button");
+      btn.className = "btn ghost";
+      btn.type = "button";
+      btn.textContent = "返却登録へ";
+      btn.onclick = ()=>{
+        showView_("return");
+        $("retSelect").value = it.id;
+        onReturnSelectChange_();
+      };
+      td.appendChild(btn);
+
+      body.appendChild(tr);
+    }
+  }
+
+  function buildReturnOptions_(){
+    const sel = $("retSelect");
+    if(!sel) return;
+    const q = $("retSearch").value.trim().toLowerCase();
+    const keep = sel.value;
+    sel.innerHTML = "";
+    const items = state.items.slice().sort((a,b)=> (Number(b.qty_out||0) - Number(a.qty_out||0)));
+    for(const it of items){
+      const hay = `${it.project||""} ${it.name||""} ${it.slipNo||""}`.toLowerCase();
+      if(q && !hay.includes(q)) continue;
+      const opt = document.createElement("option");
+      opt.value = it.id;
+      opt.textContent = `${it.project||""}｜${it.name||""}｜残${it.qty_out||0}` + (it.slipNo?`｜伝票:${it.slipNo}`:"");
+      sel.appendChild(opt);
+    }
+    if(keep) sel.value = keep;
+    onReturnSelectChange_();
+  }
+
+  function onReturnSelectChange_(){
+    const id = $("retSelect").value;
+    const it = state.items.find(x=>x.id === id);
+    $("retQtyOut").textContent = it ? String(it.qty_out||0) : "-";
+    if(it){
+      $("retQty").max = String(it.qty_out||0);
+      const cur = Number($("retQty").value || 1);
+      $("retQty").value = String(Math.min(Math.max(1, cur), Math.max(1, Number(it.qty_out||1))));
+      $("retSlipLink").innerHTML = it.slipUrl ? `伝票画像: <a href="${escapeHtml_(it.slipUrl)}" target="_blank" rel="noopener">Driveで開く</a>` : "";
+      renderReturnHistory_(it);
+    }else{
+      $("retSlipLink").textContent = "";
+      renderReturnHistory_(null);
+    }
+  }
+
+  function renderReturnHistory_(it){
+    const empty = $("retHistoryEmpty");
+    const table = $("retHistoryTable");
+    const body = $("retHistoryBody");
+    body.innerHTML = "";
+    if(!it){
+      empty.textContent = "対象を選択してください。";
+      empty.classList.remove("hidden");
+      table.classList.add("hidden");
+      return;
+    }
+    const rows = (it.returns || []).slice().reverse();
+    if(rows.length === 0){
+      empty.textContent = "返却履歴はありません。";
+      empty.classList.remove("hidden");
+      table.classList.add("hidden");
+      return;
+    }
+    empty.classList.add("hidden");
+    table.classList.remove("hidden");
+    for(const r of rows){
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${escapeHtml_(r.date||"")}</td><td class="right">${r.qty ?? ""}</td><td>${(r.slipUrl?`<a href="${escapeHtml_(r.slipUrl)}" target="_blank" rel="noopener">📎</a> `:"")}${escapeHtml_(r.memo||"")}</td>`;
+      body.appendChild(tr);
+    }
+  }
+
+  function clearForm_(){
+    $("project").value = "";
+    $("itemName").value = "";
+    $("qty").value = "";
     $("vendor").value = "";
     $("slipNo").value = "";
     $("assetNo").value = "";
-    $("startDate").value = "";
-    $("dueDate").value = "";
     $("memo").value = "";
-    $("name").focus();
+    $("dueDate").value = "";
+    // OCR state reset
+    slipUploadUrl = "";
+    slipOcrText = "";
+    $("slipFile").value = "";
+    $("slipPreview").classList.add("hidden");
+    $("slipPreview").src = "";
+    $("slipInfo").textContent = "";
+    $("ocrTextBox").classList.add("hidden");
+    $("ocrTextBox").textContent = "";
+    $("btnOcr").disabled = true;
   }
 
-  function syncPriceUnknown(){
-    const unk = $("priceUnknown").checked;
-    $("unitPrice").disabled = unk;
-    if(unk) $("unitPrice").value = "";
-  }
-  $("priceUnknown").onchange = syncPriceUnknown;
+  // ===== 初期化 =====
+  async function init(){
+    // default dates
+    $("startDate").value = toYmdToday_();
+    $("retDate").value = toYmdToday_();
 
-  function addItem(thenGoList){
-    const project = $("project").value.trim();
-    if(!project){ alert("工事名を入力してください"); return; }
+    // tabs
+    $("tabNew").addEventListener("click", ()=> showView_("new"));
+    $("tabList").addEventListener("click", ()=> showView_("list"));
+    $("tabReturn").addEventListener("click", ()=> showView_("return"));
 
-    const name = $("name").value.trim();
-    if(!name){ alert("品名を入力してください"); return; }
+    // actions
+    $("btnAdd").addEventListener("click", addItem_);
+    $("btnClear").addEventListener("click", clearForm_);
+    $("btnRefresh").addEventListener("click", refresh_);
+    $("listSearch").addEventListener("input", renderList_);
 
-    const qtyTotal = Number($("qty").value);
-    if(!Number.isFinite(qtyTotal) || qtyTotal <= 0){ alert("数量は1以上で入力してください"); return; }
+    // return screen
+    $("retSearch").addEventListener("input", buildReturnOptions_);
+    $("retSelect").addEventListener("change", onReturnSelectChange_);
+    $("btnReturn").addEventListener("click", returnItem_);
+    $("btnUndo").addEventListener("click", undoReturn_);
 
-    const priceUnknown = $("priceUnknown").checked;
-    const unitPriceStr = $("unitPrice").value.trim();
-    if(!priceUnknown && unitPriceStr !== ""){
-      const up = Number(unitPriceStr);
-      if(!Number.isFinite(up) || up < 0){ alert("単価が不正です"); return; }
-    }
-
-    const startDate = $("startDate").value;
-    if(!startDate){ alert("借入日を入力してください"); return; }
-
-    (async () => {
-      try{
-        const params = toAddParams_();
-        const res = await jsonp("addItem", params);
-        if(!res || !res.ok) { alert(res && res.error ? res.error : "登録に失敗しました"); return; }
-
-        await refreshFromServer_();
-
-        if(thenGoList) setActiveView("list");
-        else clearForm(true);
-      }catch(err){
-        console.error(err);
-        alert("通信エラー：登録に失敗しました");
+    // OCR bindings
+    $("btnCamera").addEventListener("click", ()=> $("slipFile").click());
+    $("slipFile").addEventListener("change", async ()=>{
+      const f = $("slipFile").files && $("slipFile").files[0];
+      if(!f){
+        $("btnOcr").disabled = true;
+        return;
       }
-    })();
-  }
-
-  $("statusFilter").onchange = render;
-  $("projectFilter").onchange = render;
-  $("q").oninput = render;
-
-  $("addBtn").onclick = () => addItem(true);
-  $("addStayBtn").onclick = () => addItem(false);
-  $("resetBtn").onclick = () => clearForm(false);
-
-  function toCsv(rows){
-    const esc = (v) => {
-      const s = (v ?? "").toString();
-      if(/[",\n]/.test(s)) return `"${s.replace(/"/g,'""')}"`;
-      return s;
-    };
-    return rows.map(r => r.map(esc).join(",")).join("\n");
-  }
-  function downloadCsv(filename, rows){
-    const csv = toCsv(rows);
-    const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
-  function returnsSummary(it){
-    if(!Array.isArray(it.returns) || it.returns.length===0) return "";
-    const s = [...it.returns].sort((a,b)=>(a.date||"").localeCompare(b.date||""))
-      .map(r => `${fmt(r.date)}:${r.qty}`).join(" | ");
-    return s;
-  }
-  function exportRows(list){
-    const header = [
-      "状態","現場名/工事名","品名",
-      "数量(借入)","数量(残)","数量(返却済)",
-      "借入日","返却予定日","最終返却日",
-      "区分","単価","概算費",
-      "会社","貸出伝票No","管理番号","メモ",
-      "返却履歴(date:qty)"
-    ];
-    const rows = list.map(it => {
-      const est = estimateCost(it);
-      const total = Number(it.qtyTotal)||0;
-      const out = Number(it.qtyOut)||0;
-      const ret = Math.max(0, total - out);
-      return [
-        it.status === "returned" ? "返却済み" : "借入中",
-        it.project,
-        it.name,
-        total,
-        out,
-        ret,
-        fmt(it.startDate),
-        fmt(it.dueDate) || "",
-        fmt(lastReturnDate(it)) || "",
-        it.billing === "monthly" ? "月極" : "日割り",
-        it.priceUnknown ? "不明" : (it.unitPrice === "" ? "" : it.unitPrice),
-        est === null ? "" : est,
-        it.vendor || "",
-        it.slipNo || "",
-        it.assetNo || "",
-        it.memo || "",
-        returnsSummary(it)
-      ];
+      $("btnOcr").disabled = false;
+      const dataUrl = await fileToDataUrl_(f);
+      $("slipPreview").src = dataUrl;
+      $("slipPreview").classList.remove("hidden");
+      $("slipInfo").textContent = `${f.name}（${Math.round(f.size/1024)}KB）`;
     });
-    return [header, ...rows];
+    $("btnOcr").addEventListener("click", runOcrUpload_);
+
+
+    // return slip OCR
+    $("btnRetCamera").addEventListener("click", ()=> $("retSlipFile").click());
+    $("retSlipFile").addEventListener("change", async ()=>{
+      const f = $("retSlipFile").files && $("retSlipFile").files[0];
+      if(!f){
+        $("btnRetOcr").disabled = true;
+        return;
+      }
+      $("btnRetOcr").disabled = false;
+      const dataUrl = await fileToDataUrl_(f);
+      $("retSlipPreview").src = dataUrl;
+      $("retSlipPreview").classList.remove("hidden");
+      $("retSlipInfo").textContent = `${f.name}（${Math.round(f.size/1024)}KB）`;
+    });
+    $("btnRetOcr").addEventListener("click", runRetOcrUpload_);
+
+    // first load
+
+    try{
+      await refresh_();
+      showView_("new");
+    }catch(err){
+      console.error(err);
+      alert("初回読込に失敗しました。API_URL（GASのURL）とデプロイ設定を確認してください。\n" + (err.message||err));
+      setBusy_("");
+    }
   }
-
-  $("exportViewBtn").onclick = () => downloadCsv(`lease_items_view_${todayYmd()}.csv`, exportRows(filteredItems()));
-  $("exportAllBtn").onclick = () => downloadCsv(`lease_items_all_${todayYmd()}.csv`, exportRows(items));
-
-  $("clearAllBtn").onclick = () => {
-    if(!confirm("全データを削除します。元に戻せません。よろしいですか？")) return;
-
-    items = [];
-    openHistory.clear();
-    saveCache(items);
-    updateNavCount();
-    render();
-    refreshFromServer_();
-  };
-
-  syncPriceUnknown();
-  updateNavCount();
-  render();
-  refreshFromServer_();
+  init();
 </script>
 </body>
 </html>
