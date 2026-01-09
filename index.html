@@ -42,13 +42,20 @@
     .grid3{ display:grid; gap:12px; grid-template-columns: 1fr 1fr 1fr; }
     @media (max-width: 920px){ .grid3{ grid-template-columns: 1fr; } }
     .hidden{ display:none !important; }
-  </style>
+  
+    /* ★返却完了（残0）を赤表示 */
+    .returned{
+      color:#dc2626;
+      font-weight:700;
+    }
+</style>
+
 </head>
 <body>
 <header>
   <div class="wrap">
     <h1>リース品 借入・返却 管理</h1>
-    <div class="muted">新規登録 / 一覧 / 返却登録（返却操作は返却登録に集約）</div>
+    <div class="muted">新規登録 / 一覧 / 返却登録</div>
     <div class="tabs">
       <button class="tab active" id="tabNew" type="button">新規登録</button>
       <button class="tab" id="tabList" type="button">一覧を見る</button>
@@ -67,11 +74,11 @@
 
       <div class="grid3" style="margin-top:10px;">
         <div>
-          <label>現場</label>
-          <input id="project" placeholder="例：熊野江" />
+          <label>現場（必須）</label>
+          <input id="project" placeholder="例：〇〇工事/〇〇作業所" />
         </div>
         <div>
-          <label>品名</label>
+          <label>品名（必須）</label>
           <input id="itemName" placeholder="例：単管パイプ" />
         </div>
         <div>
@@ -90,7 +97,7 @@
           <input id="dueDate" type="date" />
         </div>
         <div>
-          <label>会社（任意）</label>
+          <label>リース会社（任意）</label>
           <input id="vendor" placeholder="例：〇〇リース" />
         </div>
       </div>
@@ -101,41 +108,18 @@
           <input id="slipNo" placeholder="例：R-12345" />
         </div>
         <div>
-          <label>資産番号（任意）</label>
+          <label>管理No（任意）</label>
           <input id="assetNo" placeholder="例：A-001" />
         </div>
         <div>
-          <label>メモ（任意）</label>
+          <label>メモ</label>
           <input id="memo" placeholder="例：返却時清掃" />
         </div>
       </div>
 
-      <!-- OCR -->
-      <div class="card" style="margin-top:14px; box-shadow:none; background:var(--card);">
-        <h3 style="margin:0 0 6px; font-size:15px;">伝票を撮影 → OCRで自動入力（添付保存）</h3>
-        <div class="muted">撮影/選択 → Driveに保存（添付） → OCR → フォームに反映（最終確認してください）</div>
-        <div class="row" style="margin-top:10px;">
-          <div>
-            <label>伝票画像</label>
-            <input id="slipFile" type="file" accept="image/*" capture="environment" />
-          </div>
-          <div>
-            <label>&nbsp;</label>
-            <div class="actions">
-              <button id="btnCamera" class="btn ghost" type="button">カメラ起動</button>
-              <button id="btnOcr" class="btn" type="button" disabled>OCR実行（アップロード）</button>
-            </div>
-          </div>
-        </div>
-        <div style="margin-top:10px;">
-          <img id="slipPreview" alt="伝票プレビュー" class="hidden" style="max-width:100%; max-height:240px; border:1px solid var(--line); border-radius:12px;" />
-          <div id="slipInfo" class="muted" style="margin-top:8px;"></div>
-          <div id="ocrTextBox" class="muted hidden" style="white-space:pre-wrap; margin-top:10px; padding:10px; background:#fff; border:1px solid var(--line); border-radius:12px;"></div>
-        </div>
-      </div>
-
       <div class="actions">
-        <button id="btnAdd" class="btn" type="button">登録</button>
+        <button id="btnAddContinue" class="btn" type="button">続けて登録</button>
+        <button id="btnAdd" class="btn secondary" type="button">登録して一覧へ</button>
         <button id="btnClear" class="btn ghost" type="button">入力クリア</button>
       </div>
     </div>
@@ -147,7 +131,7 @@
       <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-end; flex-wrap:wrap;">
         <div>
           <h2 style="margin:0 0 6px;">一覧</h2>
-          <div class="muted">返却は「返却登録」画面で行います（一覧は閲覧＋返却画面へ誘導）</div>
+          <div class="muted">返却完了時は、残が赤文字になります。</div>
         </div>
         <div style="min-width:240px;">
           <label>検索</label>
@@ -174,6 +158,7 @@
       </div>
       <div class="actions">
         <button id="btnRefresh" class="btn ghost" type="button">再読込</button>
+        <button id="btnClearAll" class="btn danger" type="button" style="margin-left:auto;">全て削除</button>
       </div>
     </div>
   </section>
@@ -182,7 +167,7 @@
   <section id="viewReturn" class="hidden">
     <div class="card">
       <h2 style="margin:0 0 6px;">返却登録</h2>
-      <div class="muted">対象を選択して返却を登録します（一覧の返却操作をこちらへ移動）</div>
+      <div class="muted">対象を選択して返却を登録します。誤操作した場合は【取消】ボタンで取り消せます。</div>
 
       <div class="row" style="margin-top:10px;">
         <div>
@@ -191,40 +176,17 @@
           <select id="retSelect" style="margin-top:8px;"></select>
           <div id="retSlipLink" class="muted" style="margin-top:8px;"></div>
 
-        <!-- 返却伝票 OCR -->
-        <div class="card" style="margin-top:12px; box-shadow:none; background:var(--card);">
-          <h3 style="margin:0 0 6px; font-size:15px;">返却伝票を撮影 → OCR（添付保存）</h3>
-          <div class="muted">返却時の伝票画像もDriveに保存し、必要に応じてOCRでメモ等に活用できます（最終確認してください）。</div>
-          <div class="row" style="margin-top:10px;">
-            <div>
-              <label>返却伝票画像</label>
-              <input id="retSlipFile" type="file" accept="image/*" capture="environment" />
-            </div>
-            <div>
-              <label>&nbsp;</label>
-              <div class="actions">
-                <button id="btnRetCamera" class="btn ghost" type="button">カメラ起動</button>
-                <button id="btnRetOcr" class="btn" type="button" disabled>OCR実行（アップロード）</button>
-              </div>
-            </div>
-          </div>
-          <div style="margin-top:10px;">
-            <img id="retSlipPreview" alt="返却伝票プレビュー" class="hidden" style="max-width:100%; max-height:240px; border:1px solid var(--line); border-radius:12px;" />
-            <div id="retSlipInfo" class="muted" style="margin-top:8px;"></div>
-            <div id="retOcrTextBox" class="muted hidden" style="white-space:pre-wrap; margin-top:10px; padding:10px; background:#fff; border:1px solid var(--line); border-radius:12px;"></div>
-          </div>
-        </div>
-
         </div>
         <div>
           <label>借入中数量（残）</label>
-          <div id="retQtyOut" class="pill">-</div>
+          <div id="retQtyOut" style="font-size:15px; font-weight:700; color:#000; padding:0; border:0; background:transparent;">残り -</div>
 
           <div class="row" style="margin-top:10px;">
             <div>
               <label>返却数量</label>
               <input id="retQty" type="number" min="1" step="1" value="1" />
-            </div>
+              <button id="btnRetAll" class="btn ghost" type="button" style="margin-top:8px; width:100%;">全て返却</button>
+</div>
             <div>
               <label>返却日</label>
               <input id="retDate" type="date" />
@@ -261,10 +223,6 @@
 
   // ===== 状態 =====
   const state = { items: [] };
-  let slipUploadUrl = "";
-  let slipOcrText = "";
-  let retSlipUploadUrl = "";
-  let retSlipOcrText = "";
 
   // ===== util =====
   const $ = (id)=> document.getElementById(id);
@@ -321,151 +279,6 @@
     window.scrollTo({top:0, behavior:"smooth"});
   }
 
-  // ===== OCR =====
-  function fileToDataUrl_(file){
-    return new Promise((resolve, reject)=>{
-      const fr = new FileReader();
-      fr.onload = ()=> resolve(fr.result);
-      fr.onerror = ()=> reject(fr.error || new Error("file read error"));
-      fr.readAsDataURL(file);
-    });
-  }
-  function normalizeText_(t){
-    return (t||"")
-      .replace(/[：]/g, ":")
-      .replace(/[０-９]/g, (d)=> String.fromCharCode(d.charCodeAt(0) - 0xFEE0))
-      .replace(/[Ａ-Ｚａ-ｚ]/g, (c)=> String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
-      .replace(/\u00A0/g, " ")
-      .replace(/[ \t]+/g, " ")
-      .replace(/\r/g, "");
-  }
-  function pickDate_(t){
-    const s = normalizeText_(t);
-    const m1 = s.match(/(20\\d{2})[\\/\\-\\.](\\d{1,2})[\\/\\-\\.](\\d{1,2})/);
-    if(m1){
-      const y = m1[1];
-      const mo = String(m1[2]).padStart(2,"0");
-      const d = String(m1[3]).padStart(2,"0");
-      return `${y}-${mo}-${d}`;
-    }
-    return "";
-  }
-  function pickSlipNo_(t){
-    const s = normalizeText_(t);
-    const m = s.match(/(?:伝票|伝票No|伝票NO|No|NO|番号)\\s*[:#]?\\s*([A-Za-z0-9\\-\\/]{3,})/i);
-    return m ? m[1] : "";
-  }
-  function pickQty_(t){
-    const s = normalizeText_(t);
-    const m = s.match(/(?:数量|数)\\s*[: ]\\s*([0-9]{1,5})/);
-    if(m) return Number(m[1]);
-    const m2 = s.match(/([0-9]{1,5})\\s*(?:本|枚|個|台|式|袋|箱)/);
-    if(m2) return Number(m2[1]);
-    return null;
-  }
-  function pickVendor_(t){
-    const s = normalizeText_(t);
-    const lines = s.split("\\n").map(x=>x.trim()).filter(Boolean);
-    for(const line of lines.slice(0,10)){
-      if(/(株式会社|\\(株\\)|（株）|有限会社|\\(有\\)|リース|レンタル|商店|建設|工業|センター|支店)/.test(line) && line.length <= 30){
-        return line;
-      }
-    }
-    return "";
-  }
-  function pickItemName_(t){
-    const s = normalizeText_(t);
-    const m = s.match(/(?:品名|商品|品目)\\s*[: ]\\s*([^\\n]{2,40})/);
-    return m ? m[1].trim() : "";
-  }
-  function applyOcrToForm_(ocrText){
-    const t = normalizeText_(ocrText);
-    const vendor = pickVendor_(t);
-    if(vendor && !$("vendor").value) $("vendor").value = vendor;
-    const slipNo = pickSlipNo_(t);
-    if(slipNo && !$("slipNo").value) $("slipNo").value = slipNo;
-    const name = pickItemName_(t);
-    if(name && !$("itemName").value) $("itemName").value = name;
-    const qty = pickQty_(t);
-    if(qty && !$("qty").value) $("qty").value = String(qty);
-    const d = pickDate_(t);
-    if(d && !$("startDate").value) $("startDate").value = d;
-  }
-
-  async function runOcrUpload_(){
-    const file = $("slipFile").files && $("slipFile").files[0];
-    if(!file){ alert("伝票画像を選択してください"); return; }
-    $("btnOcr").disabled = true;
-    setBusy_("OCRアップロード中…");
-    try{
-      const dataUrl = await fileToDataUrl_(file);
-      const base64 = (dataUrl.split(",")[1] || "");
-      const res = await fetchJsonp_(`${API_URL}?action=uploadSlip`, {
-        filename: file.name || `slip_${Date.now()}.jpg`,
-        mime: file.type || "image/jpeg",
-        data: base64
-      });
-      if(!res.ok) throw new Error(res.error || "uploadSlip failed");
-
-      slipUploadUrl = res.file_url || "";
-      slipOcrText = res.ocr_text || "";
-
-      $("slipInfo").innerHTML = slipUploadUrl ? `保存先: <a href="${escapeHtml_(slipUploadUrl)}" target="_blank" rel="noopener">Driveで開く</a>` : "";
-      $("ocrTextBox").classList.remove("hidden");
-      $("ocrTextBox").textContent = slipOcrText
-        ? `OCR結果（抜粋）:\\n${slipOcrText.slice(0,1200)}${slipOcrText.length>1200?"\\n…(省略)":""}`
-        : "OCR結果: （読み取れませんでした）";
-
-      if(slipOcrText) applyOcrToForm_(slipOcrText);
-      setBusy_("");
-    }catch(err){
-      console.error(err);
-      alert(`OCRでエラー: ${err.message || err}`);
-      setBusy_("");
-    }finally{
-      $("btnOcr").disabled = false;
-    }
-  }
-
-  async function runRetOcrUpload_(){
-    const file = $("retSlipFile").files && $("retSlipFile").files[0];
-    if(!file){ alert("返却伝票画像を選択してください"); return; }
-    $("btnRetOcr").disabled = true;
-    setBusy_("返却伝票OCRアップロード中…");
-    try{
-      const dataUrl = await fileToDataUrl_(file);
-      const base64 = (dataUrl.split(",")[1] || "");
-      const res = await fetchJsonp_(`${API_URL}?action=uploadSlip`, {
-        filename: file.name || `return_slip_${Date.now()}.jpg`,
-        mime: file.type || "image/jpeg",
-        data: base64
-      });
-      if(!res.ok) throw new Error(res.error || "uploadSlip failed");
-
-      retSlipUploadUrl = res.file_url || "";
-      retSlipOcrText = res.ocr_text || "";
-
-      $("retSlipInfo").innerHTML = retSlipUploadUrl ? `保存先: <a href="${escapeHtml_(retSlipUploadUrl)}" target="_blank" rel="noopener">Driveで開く</a>` : "";
-      $("retOcrTextBox").classList.remove("hidden");
-      $("retOcrTextBox").textContent = retSlipOcrText
-        ? `OCR結果（抜粋）:\n${retSlipOcrText.slice(0,1200)}${retSlipOcrText.length>1200?"\n…(省略)":""}`
-        : "OCR結果: （読み取れませんでした）";
-
-      if(!$("retMemo").value && retSlipOcrText){
-        const slip = pickSlipNo_(retSlipOcrText);
-        if(slip) $("retMemo").value = `返却伝票:${slip}`;
-      }
-      setBusy_("");
-    }catch(err){
-      console.error(err);
-      alert(`返却伝票OCRでエラー: ${err.message || err}`);
-      setBusy_("");
-    }finally{
-      $("btnRetOcr").disabled = false;
-    }
-  }
-
-
   // ===== データ =====
   async function refresh_(){
     setBusy_("読込中…");
@@ -477,45 +290,87 @@
     buildReturnOptions_();
   }
 
-  async function addItem_(){
-    const project = $("project").value.trim();
-    const name = $("itemName").value.trim();
-    const qty_total = Number($("qty").value);
-    const start_date = $("startDate").value;
-    if(!project || !name || !qty_total || !start_date){
-      alert("必須（現場/品名/数量/借入日）を入力してください");
-      return;
-    }
+  async function addItem_(opts={}){
+  const { goList=true, keepProject=true } = opts;
 
-    $("btnAdd").disabled = true;
-    setBusy_("登録中…");
-    try{
-      const res = await fetchJsonp_(`${API_URL}?action=addItem`, {
-        project, name, qty_total,
-        vendor: $("vendor").value.trim(),
-        slip_no: $("slipNo").value.trim(),
-        slip_url: slipUploadUrl,
-        slip_ocr: slipOcrText,
-        asset_no: $("assetNo").value.trim(),
-        memo: $("memo").value.trim(),
-        start_date,
-        due_date: $("dueDate").value
-      });
-      if(!res.ok) throw new Error(res.error || "addItem failed");
-      clearForm_();
-      await refresh_();
+  const project = $("project").value.trim();
+  const name = $("itemName").value.trim();
+  const qty_total = Number($("qty").value);
+  const start_date = $("startDate").value;
+  if(!project || !name || !qty_total || !start_date){
+    alert("必須（現場/品名/数量/借入日）を入力してください");
+    return;
+  }
+
+  // 連続登録で現場だけ残したいケースが多いので控えめに保持
+  const projectKeep = keepProject ? project : "";
+
+  $("btnAdd").disabled = true;
+  const btnCont = $("btnAddContinue");
+  if(btnCont) btnCont.disabled = true;
+
+  setBusy_("登録中…");
+  try{
+    const res = await fetchJsonp_(`${API_URL}?action=addItem`, {
+      project, name, qty_total,
+      vendor: $("vendor").value.trim(),
+      slip_no: $("slipNo").value.trim(),
+      asset_no: $("assetNo").value.trim(),
+      memo: $("memo").value.trim(),
+      start_date,
+      due_date: $("dueDate").value
+    });
+    if(!res.ok) throw new Error(res.error || "addItem failed");
+
+    // フォーム初期化
+    clearForm_();
+    // 連続登録用の最低限の復元
+    $("project").value = projectKeep;
+    $("startDate").value = toYmdToday_();
+
+    await refresh_();
+
+    if(goList){
       showView_("list");
       alert("登録しました");
+    }else{
+      showView_("new");
+      // 連続登録はアラートを軽めに（必要なら外してOK）
+      alert("登録しました（続けて入力できます）");
+    }
+  }catch(err){
+    console.error(err);
+    alert(`登録でエラー: ${err.message || err}`);
+  }finally{
+    $("btnAdd").disabled = false;
+    if(btnCont) btnCont.disabled = false;
+    setBusy_("");
+  }
+}
+
+  
+  async function deleteItemFromList_(it){
+    if(!it || !it.id){ return; }
+    const label = `${it.project||""} / ${it.name||""}`.trim();
+    if(!confirm(`削除しますか？\n${label}\n\n※この操作は元に戻せません`)) return;
+    // 再度確認
+    if(!confirm(`最終確認：本当に削除します。\n${label}`)) return;
+
+    setBusy_("削除中…");
+    try{
+      const res = await fetchJsonp_(`${API_URL}?action=deleteItem`, { id: it.id });
+      if(!res.ok) throw new Error(res.error || "deleteItem failed");
+      await refresh_();
+      alert("削除しました");
     }catch(err){
       console.error(err);
-      alert(`登録でエラー: ${err.message || err}`);
+      alert(`削除でエラー: ${err.message || err}`);
     }finally{
-      $("btnAdd").disabled = false;
       setBusy_("");
     }
   }
 
-  async function returnItem_(){
+async function returnItem_(){
     const id = $("retSelect").value;
     const it = state.items.find(x=>x.id === id);
     if(!it){ alert("対象を選択してください"); return; }
@@ -531,8 +386,6 @@
       const res = await fetchJsonp_(`${API_URL}?action=returnItem`, {
         id, qty, return_date,
         memo: $("retMemo").value.trim(),
-        slip_url: retSlipUploadUrl,
-        slip_ocr: retSlipOcrText
       });
       if(!res.ok) throw new Error(res.error || "returnItem failed");
       $("retMemo").value = "";
@@ -540,17 +393,6 @@
       // 選択維持
       $("retSelect").value = id;
       onReturnSelectChange_();
-      
-      // 返却伝票OCR状態リセット
-      retSlipUploadUrl = "";
-      retSlipOcrText = "";
-      $("retSlipFile").value = "";
-      $("retSlipPreview").classList.add("hidden");
-      $("retSlipPreview").src = "";
-      $("retSlipInfo").textContent = "";
-      $("retOcrTextBox").classList.add("hidden");
-      $("retOcrTextBox").textContent = "";
-      $("btnRetOcr").disabled = true;
 
       alert("返却登録しました");
 
@@ -599,23 +441,37 @@
         <td>${escapeHtml_(it.project||"")}</td>
         <td>${escapeHtml_(it.name||"")}</td>
         <td class="right">${Number(it.qty_total||0)}</td>
-        <td class="right">${Number(it.qty_out||0)}</td>
+        <td class="right ${Number(it.qty_out||0)===0?'returned':''}">${Number(it.qty_out||0)}</td>
         <td>${it.slipUrl ? `<a href="${escapeHtml_(it.slipUrl)}" target="_blank" rel="noopener">📎</a>` : ""}${it.slipNo ? ` ${escapeHtml_(it.slipNo)}`:""}</td>
         <td>${escapeHtml_(it.startDate||"")}</td>
         <td>${escapeHtml_(it.dueDate||"")}</td>
         <td></td>
       `;
       const td = tr.querySelector("td:last-child");
-      const btn = document.createElement("button");
-      btn.className = "btn ghost";
-      btn.type = "button";
-      btn.textContent = "返却登録へ";
-      btn.onclick = ()=>{
+      const box = document.createElement("div");
+      box.style.display = "flex";
+      box.style.gap = "8px";
+      box.style.flexWrap = "wrap";
+
+      const btnRet = document.createElement("button");
+      btnRet.className = "btn";
+      btnRet.type = "button";
+      btnRet.textContent = "返却登録へ";
+      btnRet.onclick = ()=>{
         showView_("return");
         $("retSelect").value = it.id;
         onReturnSelectChange_();
       };
-      td.appendChild(btn);
+
+      const btnDel = document.createElement("button");
+      btnDel.className = "btn danger";
+      btnDel.type = "button";
+      btnDel.textContent = "削除";
+      btnDel.onclick = ()=> deleteItemFromList_(it);
+
+      box.appendChild(btnRet);
+      box.appendChild(btnDel);
+      td.appendChild(box);
 
       body.appendChild(tr);
     }
@@ -643,7 +499,7 @@
   function onReturnSelectChange_(){
     const id = $("retSelect").value;
     const it = state.items.find(x=>x.id === id);
-    $("retQtyOut").textContent = it ? String(it.qty_out||0) : "-";
+    $("retQtyOut").textContent = it ? `残り ${Number(it.qty_out||0)}` : "残り -";
     if(it){
       $("retQty").max = String(it.qty_out||0);
       const cur = Number($("retQty").value || 1);
@@ -654,6 +510,17 @@
       $("retSlipLink").textContent = "";
       renderReturnHistory_(null);
     }
+  }
+
+  async function returnAllNow_(){
+    const id = $("retSelect").value;
+    const it = state.items.find(x=>x.id === id);
+    if(!it){ alert("対象を選択してください"); return; }
+    const out = Number(it.qty_out || 0);
+    if(out <= 0){ alert("返却できる残数がありません"); return; }
+    $("retQty").value = String(out);
+    // そのまま返却登録
+    await returnItem_();
   }
 
   function renderReturnHistory_(it){
@@ -692,16 +559,6 @@
     $("assetNo").value = "";
     $("memo").value = "";
     $("dueDate").value = "";
-    // OCR state reset
-    slipUploadUrl = "";
-    slipOcrText = "";
-    $("slipFile").value = "";
-    $("slipPreview").classList.add("hidden");
-    $("slipPreview").src = "";
-    $("slipInfo").textContent = "";
-    $("ocrTextBox").classList.add("hidden");
-    $("ocrTextBox").textContent = "";
-    $("btnOcr").disabled = true;
   }
 
   // ===== 初期化 =====
@@ -716,49 +573,34 @@
     $("tabReturn").addEventListener("click", ()=> showView_("return"));
 
     // actions
-    $("btnAdd").addEventListener("click", addItem_);
+    $("btnAddContinue").addEventListener("click", ()=> addItem_({goList:false, keepProject:true}));
+    $("btnAdd").addEventListener("click", ()=> addItem_({goList:true, keepProject:true}));
     $("btnClear").addEventListener("click", clearForm_);
     $("btnRefresh").addEventListener("click", refresh_);
+    $("btnClearAll").addEventListener("click", async ()=>{
+      if(!confirm("全てのデータを削除します。よろしいですか？")) return;
+      if(!confirm("最終確認：本当に全て削除します。取り消せません。")) return;
+      try{
+        setBusy_("全削除中…");
+        const res = await fetchJsonp_(`${API_URL}?action=clearAll`, {});
+        if(!res.ok) throw new Error(res.error || "clearAll failed");
+        await refresh_();
+        alert("全て削除しました");
+      }catch(err){
+        console.error(err);
+        alert(`全て削除でエラー: ${err.message || err}`);
+      }finally{
+        setBusy_("");
+      }
+    });
     $("listSearch").addEventListener("input", renderList_);
 
     // return screen
     $("retSearch").addEventListener("input", buildReturnOptions_);
     $("retSelect").addEventListener("change", onReturnSelectChange_);
     $("btnReturn").addEventListener("click", returnItem_);
+    $("btnRetAll").addEventListener("click", returnAllNow_);
     $("btnUndo").addEventListener("click", undoReturn_);
-
-    // OCR bindings
-    $("btnCamera").addEventListener("click", ()=> $("slipFile").click());
-    $("slipFile").addEventListener("change", async ()=>{
-      const f = $("slipFile").files && $("slipFile").files[0];
-      if(!f){
-        $("btnOcr").disabled = true;
-        return;
-      }
-      $("btnOcr").disabled = false;
-      const dataUrl = await fileToDataUrl_(f);
-      $("slipPreview").src = dataUrl;
-      $("slipPreview").classList.remove("hidden");
-      $("slipInfo").textContent = `${f.name}（${Math.round(f.size/1024)}KB）`;
-    });
-    $("btnOcr").addEventListener("click", runOcrUpload_);
-
-
-    // return slip OCR
-    $("btnRetCamera").addEventListener("click", ()=> $("retSlipFile").click());
-    $("retSlipFile").addEventListener("change", async ()=>{
-      const f = $("retSlipFile").files && $("retSlipFile").files[0];
-      if(!f){
-        $("btnRetOcr").disabled = true;
-        return;
-      }
-      $("btnRetOcr").disabled = false;
-      const dataUrl = await fileToDataUrl_(f);
-      $("retSlipPreview").src = dataUrl;
-      $("retSlipPreview").classList.remove("hidden");
-      $("retSlipInfo").textContent = `${f.name}（${Math.round(f.size/1024)}KB）`;
-    });
-    $("btnRetOcr").addEventListener("click", runRetOcrUpload_);
 
     // first load
 
