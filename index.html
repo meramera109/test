@@ -48,7 +48,33 @@
       color:#dc2626;
       font-weight:700;
     }
+
+    /* ★返却完了行（残0）をグレーアウト＋ロック風 */
+    .returned-row{
+      background:#f3f4f6;
+      color:#6b7280;
+    }
+    .returned-row .btn{
+      background:#9ca3af;
+      cursor:pointer;
+    }
+
+    /* ★全て返却：注意喚起（薄い黄色） */
+    .btn.warn{
+      background:#fde68a; /* light yellow */
+      color:#92400e;
+    }
+
+    /* ★返却完了行でも注意ボタン（返却取消）は黄色を維持 */
+    .returned-row .btn.warn{
+      background:#fde68a;
+      color:#92400e;
+      cursor:pointer;
+    }
+
 </style>
+
+
 
 </head>
 <body>
@@ -93,10 +119,6 @@
           <input id="startDate" type="date" />
         </div>
         <div>
-          <label>返却予定日（任意）</label>
-          <input id="dueDate" type="date" />
-        </div>
-        <div>
           <label>リース会社（任意）</label>
           <input id="vendor" placeholder="例：〇〇リース" />
         </div>
@@ -107,15 +129,7 @@
           <label>伝票No（任意）</label>
           <input id="slipNo" placeholder="例：R-12345" />
         </div>
-        <div>
-          <label>管理No（任意）</label>
-          <input id="assetNo" placeholder="例：A-001" />
         </div>
-        <div>
-          <label>メモ</label>
-          <input id="memo" placeholder="例：返却時清掃" />
-        </div>
-      </div>
 
       <div class="actions">
         <button id="btnAddContinue" class="btn" type="button">続けて登録</button>
@@ -135,7 +149,7 @@
         </div>
         <div style="min-width:240px;">
           <label>検索</label>
-          <input id="listSearch" placeholder="現場/品名/伝票No で検索" />
+          <input id="listSearch" placeholder="現場/品名/伝票No/リース会社 で検索" />
         </div>
       </div>
 
@@ -147,9 +161,10 @@
               <th>品名</th>
               <th class="right">数量</th>
               <th class="right">残</th>
+              <th>リース会社</th>
               <th>伝票</th>
               <th>借入日</th>
-              <th>予定</th>
+              <th>返却完了日</th>
               <th>操作</th>
             </tr>
           </thead>
@@ -172,7 +187,7 @@
       <div class="row" style="margin-top:10px;">
         <div>
           <label>対象（検索）</label>
-          <input id="retSearch" placeholder="現場/品名/伝票No で検索" />
+          <input id="retSearch" placeholder="現場/品名/伝票No/リース会社 で検索" />
           <select id="retSelect" style="margin-top:8px;"></select>
           <div id="retSlipLink" class="muted" style="margin-top:8px;"></div>
 
@@ -185,20 +200,16 @@
             <div>
               <label>返却数量</label>
               <input id="retQty" type="number" min="1" step="1" value="1" />
-              <button id="btnRetAll" class="btn ghost" type="button" style="margin-top:8px; width:100%;">全て返却</button>
+              <button id="btnRetAll" class="btn warn" type="button" style="margin-top:8px; width:100%;">全て返却</button>
 </div>
             <div>
               <label>返却日</label>
               <input id="retDate" type="date" />
             </div>
           </div>
-
-          <label>メモ（任意）</label>
-          <input id="retMemo" placeholder="例：一部返却 / 破損あり 等" />
-
-          <div class="actions">
+<div class="actions">
             <button id="btnReturn" class="btn" type="button">返却登録</button>
-            <button id="btnUndo" class="btn ghost" type="button">直前返却を取消</button>
+            <button id="btnUndo" class="btn danger" type="button">直前返却を取消</button>
           </div>
         </div>
       </div>
@@ -315,10 +326,7 @@
       project, name, qty_total,
       vendor: $("vendor").value.trim(),
       slip_no: $("slipNo").value.trim(),
-      asset_no: $("assetNo").value.trim(),
-      memo: $("memo").value.trim(),
       start_date,
-      due_date: $("dueDate").value
     });
     if(!res.ok) throw new Error(res.error || "addItem failed");
 
@@ -385,10 +393,8 @@ async function returnItem_(){
     try{
       const res = await fetchJsonp_(`${API_URL}?action=returnItem`, {
         id, qty, return_date,
-        memo: $("retMemo").value.trim(),
       });
       if(!res.ok) throw new Error(res.error || "returnItem failed");
-      $("retMemo").value = "";
       await refresh_();
       // 選択維持
       $("retSelect").value = id;
@@ -431,20 +437,34 @@ async function returnItem_(){
     const body = $("listBody");
     body.innerHTML = "";
     const q = $("listSearch").value.trim().toLowerCase();
-    const items = state.items.slice().sort((a,b)=> String(b.startDate||"").localeCompare(String(a.startDate||"")));
+    const items = state.items.slice().sort((a,b)=>{
+      const aDone = Number(a.qty_out||0) === 0;
+      const bDone = Number(b.qty_out||0) === 0;
+      if(aDone !== bDone) return aDone ? 1 : -1; // 返却完了は下
+      return String(b.startDate||"").localeCompare(String(a.startDate||""));
+    });
     for(const it of items){
-      const hay = `${it.project||""} ${it.name||""} ${it.slipNo||""}`.toLowerCase();
+      const hay = `${it.project||""} ${it.name||""} ${it.slipNo||""} ${it.vendor||""}`.toLowerCase();
       if(q && !hay.includes(q)) continue;
 
+      // 返却完了日：残0の場合のみ、返却履歴の最新日を表示
+      let returnCompleteDate = "";
+      if(Number(it.qty_out||0) === 0 && Array.isArray(it.returns) && it.returns.length){
+        const last = it.returns[it.returns.length-1];
+        returnCompleteDate = (last && last.date) ? String(last.date) : "";
+      }
+
       const tr = document.createElement("tr");
+      if(Number(it.qty_out||0)===0){ tr.classList.add('returned-row'); }
       tr.innerHTML = `
         <td>${escapeHtml_(it.project||"")}</td>
         <td>${escapeHtml_(it.name||"")}</td>
         <td class="right">${Number(it.qty_total||0)}</td>
         <td class="right ${Number(it.qty_out||0)===0?'returned':''}">${Number(it.qty_out||0)}</td>
+        <td>${escapeHtml_(it.vendor||"")}</td>
         <td>${it.slipUrl ? `<a href="${escapeHtml_(it.slipUrl)}" target="_blank" rel="noopener">📎</a>` : ""}${it.slipNo ? ` ${escapeHtml_(it.slipNo)}`:""}</td>
         <td>${escapeHtml_(it.startDate||"")}</td>
-        <td>${escapeHtml_(it.dueDate||"")}</td>
+        <td>${escapeHtml_(returnCompleteDate||"")}</td>
         <td></td>
       `;
       const td = tr.querySelector("td:last-child");
@@ -453,15 +473,30 @@ async function returnItem_(){
       box.style.gap = "8px";
       box.style.flexWrap = "wrap";
 
+      
       const btnRet = document.createElement("button");
-      btnRet.className = "btn";
       btnRet.type = "button";
-      btnRet.textContent = "返却登録へ";
-      btnRet.onclick = ()=>{
-        showView_("return");
-        $("retSelect").value = it.id;
-        onReturnSelectChange_();
-      };
+
+      if(Number(it.qty_out||0) === 0){
+        // 返却完了 → 直前返却を取消（この品目の直前返却）
+        btnRet.className = "btn warn";
+        btnRet.textContent = "返却取消";
+        btnRet.onclick = async ()=>{
+          if(!confirm("直前の返却を取り消します。よろしいですか？")) return;
+          $("retSelect").value = it.id;
+          await undoReturn_();
+        };
+      }else{
+        // 返却中 → 返却登録へ
+        btnRet.className = "btn";
+        btnRet.textContent = "返却登録へ";
+        btnRet.onclick = ()=>{
+          showView_("return");
+          $("retSelect").value = it.id;
+          onReturnSelectChange_();
+        };
+      }
+
 
       const btnDel = document.createElement("button");
       btnDel.className = "btn danger";
@@ -483,9 +518,14 @@ async function returnItem_(){
     const q = $("retSearch").value.trim().toLowerCase();
     const keep = sel.value;
     sel.innerHTML = "";
-    const items = state.items.slice().sort((a,b)=> (Number(b.qty_out||0) - Number(a.qty_out||0)));
+    const items = state.items.slice().sort((a,b)=>{
+      const aDone = Number(a.qty_out||0) === 0;
+      const bDone = Number(b.qty_out||0) === 0;
+      if(aDone !== bDone) return aDone ? 1 : -1; // 返却完了は下
+      return String(b.startDate||"").localeCompare(String(a.startDate||""));
+    });
     for(const it of items){
-      const hay = `${it.project||""} ${it.name||""} ${it.slipNo||""}`.toLowerCase();
+      const hay = `${it.project||""} ${it.name||""} ${it.slipNo||""} ${it.vendor||""}`.toLowerCase();
       if(q && !hay.includes(q)) continue;
       const opt = document.createElement("option");
       opt.value = it.id;
@@ -513,6 +553,7 @@ async function returnItem_(){
   }
 
   async function returnAllNow_(){
+    if(!confirm("残っている数量をすべて返却します。よろしいですか？")) return;
     const id = $("retSelect").value;
     const it = state.items.find(x=>x.id === id);
     if(!it){ alert("対象を選択してください"); return; }
@@ -545,6 +586,7 @@ async function returnItem_(){
     table.classList.remove("hidden");
     for(const r of rows){
       const tr = document.createElement("tr");
+      if(Number(it.qty_out||0)===0){ tr.classList.add('returned-row'); }
       tr.innerHTML = `<td>${escapeHtml_(r.date||"")}</td><td class="right">${r.qty ?? ""}</td><td>${(r.slipUrl?`<a href="${escapeHtml_(r.slipUrl)}" target="_blank" rel="noopener">📎</a> `:"")}${escapeHtml_(r.memo||"")}</td>`;
       body.appendChild(tr);
     }
@@ -556,10 +598,7 @@ async function returnItem_(){
     $("qty").value = "";
     $("vendor").value = "";
     $("slipNo").value = "";
-    $("assetNo").value = "";
-    $("memo").value = "";
-    $("dueDate").value = "";
-  }
+}
 
   // ===== 初期化 =====
   async function init(){
